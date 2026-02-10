@@ -84,7 +84,15 @@ Vulnerability Disclosure Reports (VDR) and Vulnerability Exploitability eXchange
 
 ### CLE
 
-Product lifecycle events that are captured and communicated through the Common Lifecycle Enumeration will be supported. This includes product rebranding, repackaging, mergers and acquisitions, and product milestone events such as end-of-life and end-of-support.
+Product lifecycle events are communicated through the [ECMA-428 Common Lifecycle Enumeration standard](https://ecma-international.org/publications-and-standards/standards/ecma-428/). This includes product rebranding, repackaging, mergers and acquisitions, and product milestone events such as end-of-life and end-of-support.
+
+Inclusion of CLE is optional and it may be introduced on the following levels:
+- TEA Product
+- TEA Component
+- TEA Product Release
+- TEA Component Release
+
+If CLE is included, it is the responsibility of the TEA implementation to ensure consistency of CLE events across the TEA Product and its releases and similarly across the TEA Component and its releases.
 
 ## Insights
 
