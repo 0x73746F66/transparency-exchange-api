@@ -87,6 +87,30 @@ paths:
           $ref: "#/components/responses/404-object-by-id-not-found"
       tags:
         - TEA Product Release
+  /productRelease/{uuid}/cle:
+    get:
+      description: Get the CLE (Common Lifecycle Enumeration) data for a TEA Product Release
+      operationId: getCleByProductReleaseId
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          description: UUID of TEA Product Release in the TEA server
+          schema:
+            "$ref": "#/components/schemas/uuid"
+      responses:
+        '200':
+          description: CLE data for the requested TEA Product Release found and returned
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/cle"
+        '400':
+          $ref: "#/components/responses/400-invalid-request"
+        '404':
+          $ref: "#/components/responses/404-object-by-id-not-found"
+      tags:
+        - CLE
   /productReleases:
     get:
       description: Returns a list of TEA product releases. Note that multiple product releases may match.
@@ -103,6 +127,30 @@ paths:
           $ref: "#/components/responses/400-invalid-request"
       tags:
         - TEA Product Release
+  /product/{uuid}/cle:
+    get:
+      description: Get the CLE (Common Lifecycle Enumeration) data for a TEA Product
+      operationId: getCleByProductId
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          description: UUID of TEA Product in the TEA server
+          schema:
+            "$ref": "#/components/schemas/uuid"
+      responses:
+        '200':
+          description: CLE data for the requested TEA Product found and returned
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/cle"
+        '400':
+          $ref: "#/components/responses/400-invalid-request"
+        '404':
+          $ref: "#/components/responses/404-object-by-id-not-found"
+      tags:
+        - CLE
   /products:
     get:
       description: Returns a list of TEA products. Note that multiple products may
@@ -170,6 +218,30 @@ paths:
           $ref: "#/components/responses/404-object-by-id-not-found"
       tags:
         - TEA Component
+  /component/{uuid}/cle:
+    get:
+      description: Get the CLE (Common Lifecycle Enumeration) data for a TEA Component
+      operationId: getCleByComponentId
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          description: UUID of TEA Component in the TEA server
+          schema:
+            "$ref": "#/components/schemas/uuid"
+      responses:
+        '200':
+          description: CLE data for the requested TEA Component found and returned
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/cle"
+        '400':
+          $ref: "#/components/responses/400-invalid-request"
+        '404':
+          $ref: "#/components/responses/404-object-by-id-not-found"
+      tags:
+        - CLE
   /componentRelease/{uuid}:
     get:
       description: Get the TEA Component Release with its latest collection
@@ -194,6 +266,30 @@ paths:
           $ref: "#/components/responses/404-object-by-id-not-found"
       tags:
         - TEA Component Release        
+  /componentRelease/{uuid}/cle:
+    get:
+      description: Get the CLE (Common Lifecycle Enumeration) data for a TEA Component Release
+      operationId: getCleByComponentReleaseId
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          description: UUID of TEA Component Release in the TEA server
+          schema:
+            "$ref": "#/components/schemas/uuid"
+      responses:
+        '200':
+          description: CLE data for the requested TEA Component Release found and returned
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/cle"
+        '400':
+          $ref: "#/components/responses/400-invalid-request"
+        '404':
+          $ref: "#/components/responses/404-object-by-id-not-found"
+      tags:
+        - CLE
   /componentRelease/{uuid}/collection/latest:
     get:
       description: Get the latest TEA Collection belonging to the TEA Component Release
@@ -628,7 +724,6 @@ components:
           description: List of different formats of this component release
           items:
             "$ref": "#/components/schemas/release-distribution"
-        # add lifecycle here
       required:
         - uuid
         - version
@@ -1061,6 +1156,183 @@ components:
         - productReleaseUuid
         - servers
 
+    #
+    # CLE (Common Lifecycle Enumeration) objects
+    # Based on ECMA-428 TC54 TG3 CLE Specification v1.0.0
+    #
+    cle-event-type:
+      type: string
+      description: The type of CLE lifecycle event
+      enum:
+        - released
+        - endOfDevelopment
+        - endOfSupport
+        - endOfLife
+        - endOfDistribution
+        - endOfMarketing
+        - supersededBy
+        - componentRenamed
+        - withdrawn
+    cle-version-specifier:
+      type: object
+      description: A version specifier that can be either a single version or a version range
+      properties:
+        version:
+          type: string
+          description: A specific version string
+        range:
+          type: string
+          description: A version range in vers format (e.g. "vers:npm/>=1.0.0|<2.0.0")
+    cle-event:
+      type: object
+      description: A discrete lifecycle event from the CLE specification
+      properties:
+        id:
+          type: integer
+          description: A unique, auto-incrementing integer identifier for the event
+        type:
+          description: The type of lifecycle event
+          $ref: "#/components/schemas/cle-event-type"
+        effective:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp (UTC) when the event takes effect
+        published:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp (UTC) when the event was first published
+        version:
+          type: string
+          description: Version string (used by released event type)
+        versions:
+          type: array
+          description: List of version specifiers affected by this event
+          items:
+            $ref: "#/components/schemas/cle-version-specifier"
+        supportId:
+          type: string
+          description: Reference to a support policy ID defined in the definitions section
+        license:
+          type: string
+          description: License identifier (used by released event type)
+        supersededByVersion:
+          type: string
+          description: Version string that supersedes the affected versions (used by supersededBy event type)
+        identifiers:
+          type: array
+          description: New identifiers for the component (used by componentRenamed event type)
+          items:
+            $ref: "#/components/schemas/identifier"
+        eventId:
+          type: integer
+          description: ID of the event being withdrawn (used by withdrawn event type)
+        reason:
+          type: string
+          description: Human-readable explanation (used by withdrawn event type)
+        description:
+          type: string
+          description: Human-readable description of the event
+        references:
+          type: array
+          description: List of URLs to supporting documentation
+          items:
+            type: string
+            format: uri
+      required:
+        - id
+        - type
+        - effective
+        - published
+      examples:
+        - id: 1
+          type: released
+          effective: "2024-01-01T00:00:00Z"
+          version: "1.0.0"
+          license: MIT
+          published: "2023-06-01T00:00:00Z"
+        - id: 3
+          type: endOfSupport
+          effective: "2024-01-01T00:00:00Z"
+          versions:
+            - version: "1.0.0"
+          supportId: standard
+          published: "2023-06-01T00:00:00Z"
+    cle-support-definition:
+      type: object
+      description: A support policy definition from CLE
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the support policy
+        description:
+          type: string
+          description: Human-readable description of the policy
+        url:
+          type: string
+          format: uri
+          description: URL to detailed documentation about this support policy
+      required:
+        - id
+        - description
+      examples:
+        - id: standard
+          description: Standard product support policy
+          url: https://example.com/support/standard
+    cle-definitions:
+      type: object
+      description: Container for reusable CLE policy definitions
+      properties:
+        support:
+          type: array
+          description: List of support policies
+          items:
+            $ref: "#/components/schemas/cle-support-definition"
+    cle:
+      type: object
+      description: |
+        Common Lifecycle Enumeration (CLE) object based on ECMA-428 TC54 TG3 CLE Specification v1.0.0.
+        Contains lifecycle events and optional reusable definitions for a component or product.
+      properties:
+        events:
+          type: array
+          description: |
+            Ordered array of CLE Event objects representing lifecycle events.
+            MUST be ordered by ID in descending order (newest events with highest IDs first).
+          items:
+            $ref: "#/components/schemas/cle-event"
+        definitions:
+          description: Container for reusable policy definitions referenced by events
+          $ref: "#/components/schemas/cle-definitions"
+      required:
+        - events
+      examples:
+        - events:
+            - id: 3
+              type: endOfSupport
+              effective: "2025-06-01T00:00:00Z"
+              versions:
+                - range: "vers:npm/>=1.0.0|<2.0.0"
+              supportId: standard
+              published: "2025-01-01T00:00:00Z"
+            - id: 2
+              type: endOfDevelopment
+              effective: "2025-01-01T00:00:00Z"
+              versions:
+                - version: "1.0.0"
+              supportId: standard
+              published: "2024-06-01T00:00:00Z"
+            - id: 1
+              type: released
+              effective: "2024-01-01T00:00:00Z"
+              version: "1.0.0"
+              license: Apache-2.0
+              published: "2024-01-01T00:00:00Z"
+          definitions:
+            support:
+              - id: standard
+                description: Standard product support policy
+                url: https://example.com/support/standard
+
     pagination-details:
       type: object
       properties:
@@ -1223,6 +1495,7 @@ tags:
   - name: TEA Component Release
   - name: TEA Artifact
   - name: TEA Discovery
+  - name: CLE
 externalDocs:
   description: Transparency Exchange API specification
   url: https://github.com/CycloneDX/transparency-exchange-api
