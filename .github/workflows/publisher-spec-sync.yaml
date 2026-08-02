@@ -47,15 +47,35 @@ jobs:
               # publisher document is worse than the spec it is built from.
               run: |
                   set -o pipefail
+                  # `redocly lint` exits non-zero whenever it reports an error,
+                  # and both documents report 24, so its exit status says
+                  # nothing the count does not. Discard it: this step runs under
+                  # `bash -e`, and without the `|| true` the pipeline's inherited
+                  # failure aborts the assignment below before anything is
+                  # compared. That is not a hypothetical — it is why this step
+                  # failed on every run before this comment existed.
                   count() {
-                    npx redocly lint "$1" --format=json 2>/dev/null \
-                      | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const j=JSON.parse(s);console.log(j.problems.filter(p=>p.severity==="error").length)})'
+                    { npx redocly lint "$1" --format=json 2>/dev/null || true; } | node -e '
+                      let s = ""
+                      process.stdin.on("data", d => s += d).on("end", () => {
+                        // No output means redocly itself failed. Counting that
+                        // as zero errors would leave the gate below passing
+                        // while checking nothing.
+                        if (!s.trim()) {
+                          console.error("redocly produced no output for the document under lint")
+                          process.exit(1)
+                        }
+                        const j = JSON.parse(s)
+                        console.log(j.problems.filter(p => p.severity === "error").length)
+                      })'
                   }
                   base=$(count ../openapi.yaml)
                   pub=$(count openapi.yaml)
                   echo "consumption errors: $base, publisher errors: $pub"
                   if [ "$pub" -gt "$base" ]; then
                     echo "The publication overlay introduced $((pub - base)) new error(s)."
-                    npx redocly lint openapi.yaml
+                    # `|| true` so errexit does not cut the diagnostic short
+                    # before the explicit exit below.
+                    npx redocly lint openapi.yaml || true
                     exit 1
                   fi
