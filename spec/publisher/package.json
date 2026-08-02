@@ -1,0 +1,15 @@
+{
+  "name": "tea-publisher-spec",
+  "private": true,
+  "type": "module",
+  "description": "Builds spec/publisher/openapi.yaml from the consumption specification plus a publication overlay.",
+  "scripts": {
+    "build": "node build.mjs",
+    "check": "node build.mjs --check",
+    "lint": "redocly lint openapi.yaml"
+  },
+  "devDependencies": {
+    "@redocly/cli": "^1.34.5",
+    "js-yaml": "^4.1.0"
+  }
+}

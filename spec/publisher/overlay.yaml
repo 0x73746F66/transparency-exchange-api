@@ -1,0 +1,1114 @@
+# Publication operations, overlaid onto the consumption specification.
+#
+# Everything shared with the consumption API is referenced, never redefined.
+# build.mjs fails the build if this file declares a path method, schema,
+# parameter, response or request body that the consumption specification
+# already owns — which is how the previous copy drifted.
+
+paths:
+  # ── Product ───────────────────────────────────────────────────────────────
+  /product:
+    post:
+      summary: Create a TEA Product
+      description: |
+        Create a product and return the object the consumption API will serve,
+        including the UUID and identifiers the server assigned.
+      operationId: createTeaProduct
+      parameters:
+        - $ref: "#/components/parameters/idempotency-key"
+      requestBody:
+        $ref: "#/components/requestBodies/write-product"
+      responses:
+        "201":
+          $ref: "#/components/responses/product-written"
+        "400":
+          $ref: "#/components/responses/publisher-bad-request"
+        "401":
+          $ref: "#/components/responses/publisher-unauthorized"
+        "403":
+          $ref: "#/components/responses/publisher-forbidden"
+        "409":
+          $ref: "#/components/responses/publisher-conflict"
+      tags:
+        - TEA Publication
+  /product/{uuid}:
+    patch:
+      summary: Update a TEA Product
+      description: Update a product's mutable fields. Omitted fields are left unchanged.
+      operationId: updateTeaProduct
+      parameters:
+        - $ref: "#/components/parameters/object-uuid"
+      requestBody:
+        $ref: "#/components/requestBodies/write-product"
+      responses:
+        "200":
+          $ref: "#/components/responses/product-written"
+        "400":
+          $ref: "#/components/responses/publisher-bad-request"
+        "401":
+          $ref: "#/components/responses/publisher-unauthorized"
+        "403":
+          $ref: "#/components/responses/publisher-forbidden"
+        "404":
+          $ref: "#/components/responses/publisher-not-found"
+        "409":
+          $ref: "#/components/responses/publisher-conflict"
+      tags:
+        - TEA Publication
+    delete:
+      summary: Delete a TEA Product
+      description: |
+        Delete a product and everything beneath it.
+
+        Deletion does not retract what consumers already hold. A product that
+        has been public SHOULD also be withdrawn through a CLE `withdrawn`
+        event, so a consumer who acted on it learns that it was retracted
+        rather than simply finding it gone.
+      operationId: deleteTeaProduct
+      parameters:
+        - $ref: "#/components/parameters/object-uuid"
+      responses:
+        "204":
+          $ref: "#/components/responses/object-deleted"
+        "401":
+          $ref: "#/components/responses/publisher-unauthorized"
+        "403":
+          $ref: "#/components/responses/publisher-forbidden"
+        "404":
+          $ref: "#/components/responses/publisher-not-found"
+      tags:
+        - TEA Publication
+
+  # ── Component ─────────────────────────────────────────────────────────────
+  /component:
+    post:
+      summary: Create a TEA Component
+      operationId: createTeaComponent
+      description: Create a component and return the object the consumption API will serve.
+      parameters:
+        - $ref: "#/components/parameters/idempotency-key"
+      requestBody:
+        $ref: "#/components/requestBodies/write-component"
+      responses:
+        "201":
+          $ref: "#/components/responses/component-written"
+        "400":
+          $ref: "#/components/responses/publisher-bad-request"
+        "401":
+          $ref: "#/components/responses/publisher-unauthorized"
+        "403":
+          $ref: "#/components/responses/publisher-forbidden"
+        "409":
+          $ref: "#/components/responses/publisher-conflict"
+      tags:
+        - TEA Publication
+  /component/{uuid}:
+    patch:
+      summary: Update a TEA Component
+      description: Update a component's mutable fields. Omitted fields are left unchanged.
+      operationId: updateTeaComponent
+      parameters:
+        - $ref: "#/components/parameters/object-uuid"
+      requestBody:
+        $ref: "#/components/requestBodies/write-component"
+      responses:
+        "200":
+          $ref: "#/components/responses/component-written"
+        "400":
+          $ref: "#/components/responses/publisher-bad-request"
+        "401":
+          $ref: "#/components/responses/publisher-unauthorized"
+        "403":
+          $ref: "#/components/responses/publisher-forbidden"
+        "404":
+          $ref: "#/components/responses/publisher-not-found"
+        "409":
+          $ref: "#/components/responses/publisher-conflict"
+      tags:
+        - TEA Publication
+    delete:
+      summary: Delete a TEA Component
+      description: Delete a component and its releases.
+      operationId: deleteTeaComponent
+      parameters:
+        - $ref: "#/components/parameters/object-uuid"
+      responses:
+        "204":
+          $ref: "#/components/responses/object-deleted"
+        "401":
+          $ref: "#/components/responses/publisher-unauthorized"
+        "403":
+          $ref: "#/components/responses/publisher-forbidden"
+        "404":
+          $ref: "#/components/responses/publisher-not-found"
+      tags:
+        - TEA Publication
+
+  # ── Releases ──────────────────────────────────────────────────────────────
+  # Split to match the consumption API, which has distinguished product
+  # releases from component releases since 0.1.0. A single /release could not
+  # say which of the two it was creating.
+  /productRelease:
+    post:
+      summary: Create a TEA Product Release
+      operationId: createTeaProductRelease
+      description: Create a release of a product.
+      parameters:
+        - $ref: "#/components/parameters/idempotency-key"
+      requestBody:
+        $ref: "#/components/requestBodies/write-product-release"
+      responses:
+        "201":
+          $ref: "#/components/responses/product-release-written"
+        "400":
+          $ref: "#/components/responses/publisher-bad-request"
+        "401":
+          $ref: "#/components/responses/publisher-unauthorized"
+        "403":
+          $ref: "#/components/responses/publisher-forbidden"
+        "409":
+          $ref: "#/components/responses/publisher-conflict"
+      tags:
+        - TEA Publication
+  /productRelease/{uuid}:
+    patch:
+      summary: Update a TEA Product Release
+      operationId: updateTeaProductRelease
+      parameters:
+        - $ref: "#/components/parameters/object-uuid"
+      description: Update a product release's mutable fields.
+      requestBody:
+        $ref: "#/components/requestBodies/write-product-release"
+      responses:
+        "200":
+          $ref: "#/components/responses/product-release-written"
+        "400":
+          $ref: "#/components/responses/publisher-bad-request"
+        "401":
+          $ref: "#/components/responses/publisher-unauthorized"
+        "403":
+          $ref: "#/components/responses/publisher-forbidden"
+        "404":
+          $ref: "#/components/responses/publisher-not-found"
+      tags:
+        - TEA Publication
+    delete:
+      summary: Delete a TEA Product Release
+      operationId: deleteTeaProductRelease
+      parameters:
+        - $ref: "#/components/parameters/object-uuid"
+      description: Delete a product release and the collection it holds.
+      responses:
+        "204":
+          $ref: "#/components/responses/object-deleted"
+        "401":
+          $ref: "#/components/responses/publisher-unauthorized"
+        "403":
+          $ref: "#/components/responses/publisher-forbidden"
+        "404":
+          $ref: "#/components/responses/publisher-not-found"
+      tags:
+        - TEA Publication
+  /componentRelease:
+    post:
+      summary: Create a TEA Component Release
+      operationId: createTeaComponentRelease
+      description: Create a release of a component.
+      parameters:
+        - $ref: "#/components/parameters/idempotency-key"
+      requestBody:
+        $ref: "#/components/requestBodies/write-component-release"
+      responses:
+        "201":
+          $ref: "#/components/responses/component-release-written"
+        "400":
+          $ref: "#/components/responses/publisher-bad-request"
+        "401":
+          $ref: "#/components/responses/publisher-unauthorized"
+        "403":
+          $ref: "#/components/responses/publisher-forbidden"
+        "409":
+          $ref: "#/components/responses/publisher-conflict"
+      tags:
+        - TEA Publication
+  /componentRelease/{uuid}:
+    patch:
+      summary: Update a TEA Component Release
+      operationId: updateTeaComponentRelease
+      parameters:
+        - $ref: "#/components/parameters/object-uuid"
+      description: Update a component release's mutable fields.
+      requestBody:
+        $ref: "#/components/requestBodies/write-component-release"
+      responses:
+        "200":
+          $ref: "#/components/responses/component-release-written"
+        "400":
+          $ref: "#/components/responses/publisher-bad-request"
+        "401":
+          $ref: "#/components/responses/publisher-unauthorized"
+        "403":
+          $ref: "#/components/responses/publisher-forbidden"
+        "404":
+          $ref: "#/components/responses/publisher-not-found"
+      tags:
+        - TEA Publication
+    delete:
+      summary: Delete a TEA Component Release
+      operationId: deleteTeaComponentRelease
+      parameters:
+        - $ref: "#/components/parameters/object-uuid"
+      description: Delete a component release and the collection it holds.
+      responses:
+        "204":
+          $ref: "#/components/responses/object-deleted"
+        "401":
+          $ref: "#/components/responses/publisher-unauthorized"
+        "403":
+          $ref: "#/components/responses/publisher-forbidden"
+        "404":
+          $ref: "#/components/responses/publisher-not-found"
+      tags:
+        - TEA Publication
+
+  # ── Collections ───────────────────────────────────────────────────────────
+  # A collection is not an independent object: the consumption specification
+  # states its UUID matches the release it belongs to, and that an update only
+  # changes the version. Publishing one is therefore addressed through its
+  # release, and is a PUT rather than a POST — there is one current collection
+  # per release, and this replaces it with the next version.
+  /productRelease/{uuid}/collection:
+    put:
+      summary: Publish a new collection version for a product release
+      operationId: publishTeaProductReleaseCollection
+      parameters:
+        - $ref: "#/components/parameters/object-uuid"
+      description: |
+        Publish the next version of this release's collection.
+
+        The server assigns the version, incrementing from the current one.
+        `updateReason` is required: a collection whose contents change without
+        saying why is indistinguishable, to a consumer, from one that was
+        tampered with.
+      requestBody:
+        $ref: "#/components/requestBodies/write-collection"
+      responses:
+        "200":
+          $ref: "#/components/responses/collection-written"
+        "400":
+          $ref: "#/components/responses/publisher-bad-request"
+        "401":
+          $ref: "#/components/responses/publisher-unauthorized"
+        "403":
+          $ref: "#/components/responses/publisher-forbidden"
+        "404":
+          $ref: "#/components/responses/publisher-not-found"
+      tags:
+        - TEA Publication
+  /componentRelease/{uuid}/collection:
+    put:
+      summary: Publish a new collection version for a component release
+      operationId: publishTeaComponentReleaseCollection
+      parameters:
+        - $ref: "#/components/parameters/object-uuid"
+      description: |
+        Publish the next version of this release's collection. The server
+        assigns the version, and `updateReason` is required.
+      requestBody:
+        $ref: "#/components/requestBodies/write-collection"
+      responses:
+        "200":
+          $ref: "#/components/responses/collection-written"
+        "400":
+          $ref: "#/components/responses/publisher-bad-request"
+        "401":
+          $ref: "#/components/responses/publisher-unauthorized"
+        "403":
+          $ref: "#/components/responses/publisher-forbidden"
+        "404":
+          $ref: "#/components/responses/publisher-not-found"
+      tags:
+        - TEA Publication
+
+  # ── Artifacts ─────────────────────────────────────────────────────────────
+  /artifact:
+    post:
+      summary: Create a TEA Artifact
+      operationId: createTeaArtifact
+      description: |
+        Register an artifact within a release's collection.
+
+        This creates the entry and its formats; it does not carry the bytes.
+        Content goes up per format afterwards. Keeping the two apart matters
+        because an SBOM is routinely tens of megabytes, and a publisher who
+        must resend all of it to correct one metadata field will in practice
+        not correct the field.
+      parameters:
+        - $ref: "#/components/parameters/idempotency-key"
+      requestBody:
+        $ref: "#/components/requestBodies/write-artifact"
+      responses:
+        "201":
+          $ref: "#/components/responses/artifact-written"
+        "400":
+          $ref: "#/components/responses/publisher-bad-request"
+        "401":
+          $ref: "#/components/responses/publisher-unauthorized"
+        "403":
+          $ref: "#/components/responses/publisher-forbidden"
+        "404":
+          $ref: "#/components/responses/publisher-not-found"
+        "409":
+          $ref: "#/components/responses/publisher-conflict"
+      tags:
+        - TEA Publication
+  /artifact/{uuid}:
+    patch:
+      summary: Update a TEA Artifact
+      operationId: updateTeaArtifact
+      description: |
+        Update an artifact's metadata.
+
+        Stored bytes are immutable: a checksum a consumer has already recorded
+        must not begin describing different content. Replacing content means a
+        new format or a new artifact version, never an overwrite in place.
+      parameters:
+        - $ref: "#/components/parameters/artifact-uuid"
+      requestBody:
+        $ref: "#/components/requestBodies/update-artifact"
+      responses:
+        "200":
+          $ref: "#/components/responses/artifact-written"
+        "400":
+          $ref: "#/components/responses/publisher-bad-request"
+        "401":
+          $ref: "#/components/responses/publisher-unauthorized"
+        "403":
+          $ref: "#/components/responses/publisher-forbidden"
+        "404":
+          $ref: "#/components/responses/publisher-not-found"
+      tags:
+        - TEA Publication
+    delete:
+      summary: Delete a TEA Artifact
+      operationId: deleteTeaArtifact
+      description: Delete an artifact and any content this server holds for it.
+      parameters:
+        - $ref: "#/components/parameters/artifact-uuid"
+      responses:
+        "204":
+          $ref: "#/components/responses/object-deleted"
+        "401":
+          $ref: "#/components/responses/publisher-unauthorized"
+        "403":
+          $ref: "#/components/responses/publisher-forbidden"
+        "404":
+          $ref: "#/components/responses/publisher-not-found"
+      tags:
+        - TEA Publication
+  /artifact/{uuid}/format/{formatIndex}/content:
+    put:
+      summary: Upload artifact content
+      operationId: uploadTeaArtifactContent
+      description: |
+        Upload the bytes of one artifact format.
+
+        The body is the artifact itself in its own media type, rather than
+        base64 inside JSON, which would inflate it by a third for no benefit.
+
+        A client SHOULD send `Content-Digest` (RFC 9530). Where it does, the
+        server MUST verify it against the received bytes and reject a mismatch.
+        That is what makes an upload safe to retry: a truncated transfer fails
+        loudly instead of publishing corrupt content under a checksum that says
+        otherwise.
+      parameters:
+        - $ref: "#/components/parameters/artifact-uuid"
+        - $ref: "#/components/parameters/format-index"
+        - $ref: "#/components/parameters/content-digest"
+      requestBody:
+        required: true
+        description: The artifact bytes, in the media type declared by the format.
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+          application/vnd.cyclonedx+json:
+            schema:
+              type: string
+              format: binary
+          application/spdx+json:
+            schema:
+              type: string
+              format: binary
+          application/sarif+json:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "200":
+          $ref: "#/components/responses/artifact-written"
+        "400":
+          $ref: "#/components/responses/publisher-bad-request"
+        "401":
+          $ref: "#/components/responses/publisher-unauthorized"
+        "403":
+          $ref: "#/components/responses/publisher-forbidden"
+        "404":
+          $ref: "#/components/responses/publisher-not-found"
+        "413":
+          $ref: "#/components/responses/publisher-payload-too-large"
+        "415":
+          $ref: "#/components/responses/publisher-unsupported-media-type"
+      tags:
+        - TEA Publication
+  /artifact/{uuid}/format/{formatIndex}/signature:
+    put:
+      summary: Attach a detached signature to an artifact format
+      operationId: uploadTeaArtifactSignature
+      description: |
+        Attach a detached signature, declaring the scheme it was produced with.
+
+        The consumption API exposes a `signatureUrl` and nothing more, so a
+        consumer must infer the scheme from the bytes before it can verify
+        anything. The publisher knows, and recording it is what turns a
+        signature from something that exists into something that can be
+        checked. See signatures/signature.md.
+      parameters:
+        - $ref: "#/components/parameters/artifact-uuid"
+        - $ref: "#/components/parameters/format-index"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/artifact-signature"
+      responses:
+        "200":
+          $ref: "#/components/responses/artifact-written"
+        "400":
+          $ref: "#/components/responses/publisher-bad-request"
+        "401":
+          $ref: "#/components/responses/publisher-unauthorized"
+        "403":
+          $ref: "#/components/responses/publisher-forbidden"
+        "404":
+          $ref: "#/components/responses/publisher-not-found"
+        "415":
+          $ref: "#/components/responses/publisher-unsupported-media-type"
+      tags:
+        - TEA Publication
+
+  # ── Access policy ─────────────────────────────────────────────────────────
+  # Named "access policy" rather than "distribution" because the consumption
+  # specification already uses `release-distribution` for something else
+  # entirely: a downloadable build with its own URL and checksums. Reusing the
+  # word for access control in a combined document would be actively
+  # misleading.
+  /accessPolicy/{uuid}:
+    get:
+      summary: Read the access policy in force for an object
+      operationId: getTeaAccessPolicy
+      description: |
+        The access policy actually in force, after inheritance.
+
+        Reported as both what the object declares and what it effectively has,
+        because the difference between the two is exactly where accidental
+        disclosure hides.
+      parameters:
+        - $ref: "#/components/parameters/object-uuid"
+      responses:
+        "200":
+          $ref: "#/components/responses/access-policy-read"
+        "401":
+          $ref: "#/components/responses/publisher-unauthorized"
+        "403":
+          $ref: "#/components/responses/publisher-forbidden"
+        "404":
+          $ref: "#/components/responses/publisher-not-found"
+      tags:
+        - TEA Access Policy
+    put:
+      summary: Set the access policy for an object
+      operationId: setTeaAccessPolicy
+      description: |
+        Replace the object's own access policy.
+
+        A server MUST reject a policy wider than the effective policy of the
+        object's parent, with `ACCESS_WIDENS_PARENT`. A server SHOULD require
+        a separate confirmation for a change to `public`, because no later
+        request undoes it: whatever was fetched while it was public stays
+        fetched.
+      parameters:
+        - $ref: "#/components/parameters/object-uuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/access-policy"
+      responses:
+        "200":
+          $ref: "#/components/responses/access-policy-read"
+        "400":
+          $ref: "#/components/responses/publisher-bad-request"
+        "401":
+          $ref: "#/components/responses/publisher-unauthorized"
+        "403":
+          $ref: "#/components/responses/publisher-forbidden"
+        "404":
+          $ref: "#/components/responses/publisher-not-found"
+        "409":
+          $ref: "#/components/responses/publisher-conflict"
+      tags:
+        - TEA Access Policy
+
+components:
+  schemas:
+    publisher-error-type:
+      type: string
+      description: |
+        Classification of a publication error.
+
+        Extends the consumption specification's `unknown-error-type` with the
+        failures only a writer can hit. The two consumption values are repeated
+        so a client can branch on one enumeration rather than two.
+      enum:
+        - OBJECT_UNKNOWN
+        - OBJECT_NOT_SHAREABLE
+        - INVALID_REQUEST
+        - UNAUTHORIZED
+        - FORBIDDEN
+        - DUPLICATE_OBJECT
+        - VERSION_CONFLICT
+        - ACCESS_WIDENS_PARENT
+        - UNSUPPORTED_MEDIA_TYPE
+        - PAYLOAD_TOO_LARGE
+        - CHECKSUM_MISMATCH
+        - SIGNATURE_INVALID
+
+    publisher-error-response:
+      type: object
+      description: |
+        A publication error. Same envelope as the consumption specification's
+        `error-response`, over the wider publication enumeration, with an
+        optional human-readable message and a pointer to the offending field.
+
+        Publication is automated — a release pipeline is usually the caller —
+        so a failure has to be actionable without a human reading prose.
+      additionalProperties: false
+      properties:
+        error:
+          $ref: "#/components/schemas/publisher-error-type"
+        message:
+          type: string
+          description: Human-readable explanation. Not a stable interface; branch on `error`.
+        field:
+          type: string
+          description: JSON Pointer to the offending member of the request body, where one applies.
+      required:
+        - error
+
+    access-policy:
+      type: object
+      description: |
+        Who may read an object through the consumption API.
+
+        TEA describes how transparency data is fetched, not who is entitled to
+        fetch it. That is a reasonable boundary for a consumption API and an
+        impossible one for a publication API, where the same server holds
+        material that is deliberately public, material shared with named
+        counterparties under agreement, and material that is purely internal.
+        Absent this, every publisher invents an answer, incompatibly.
+
+        Resolved by inheritance: an artifact takes its collection's policy, a
+        collection its release's, a release its product's. An object MAY narrow
+        what it inherits and MUST NOT widen it — a server rejects the attempt
+        with `ACCESS_WIDENS_PARENT`. Without that rule, marking a product
+        private would guarantee nothing, because any artifact beneath it could
+        quietly be made public.
+
+        A consumer denied by this policy is answered with the consumption
+        specification's existing `OBJECT_NOT_SHAREABLE`, so enforcement needs
+        no new consumer-side behaviour.
+      additionalProperties: false
+      properties:
+        visibility:
+          type: string
+          description: |
+            `private` — only the publishing organisation may read it.
+
+            `shared` — readable by the publishing organisation and the
+            organisations named in `sharedWith`. Authentication is required and
+            the reader's identity decides the answer.
+
+            `public` — readable without authentication. The only value that
+            makes an object part of the open transparency web, and irreversible
+            in practice: what has been fetched cannot be recalled.
+          enum:
+            - private
+            - shared
+            - public
+          default: private
+        sharedWith:
+          type: array
+          description: |
+            Organisations entitled to read this object when `visibility` is
+            `shared`. MUST be empty for any other visibility, so that a later
+            change to `private` cannot silently leave a grant standing.
+          items:
+            $ref: "#/components/schemas/share-grant"
+        publishTo:
+          type: array
+          description: |
+            Remote TEA servers this object is mirrored to. Mirroring is a copy,
+            not a reference: once an object reaches another server, this
+            server's policy no longer governs it.
+          items:
+            $ref: "#/components/schemas/publication-target"
+      required:
+        - visibility
+
+    share-grant:
+      type: object
+      description: An entitlement for one organisation to read one object.
+      additionalProperties: false
+      properties:
+        organizationUuid:
+          description: The consuming organisation's identifier on this server.
+          $ref: "#/components/schemas/uuid"
+        organizationName:
+          type: string
+          description: Display name when the grant was made. Advisory; the UUID is the identity.
+        grantedAt:
+          $ref: "#/components/schemas/date-time"
+        expiresAt:
+          description: |
+            When the grant lapses. A grant for the length of an evaluation or a
+            contract is the common case, and a server that cannot express an
+            expiry pushes publishers towards grants nobody ever revokes.
+          $ref: "#/components/schemas/date-time"
+      required:
+        - organizationUuid
+
+    publication-target:
+      type: object
+      description: A remote TEA server this publisher mirrors objects to.
+      additionalProperties: false
+      properties:
+        uuid:
+          description: Identifier of a target already configured on this server.
+          $ref: "#/components/schemas/uuid"
+        domain:
+          type: string
+          description: |
+            The TEI domain-name component of the target, which is what a
+            consumer resolves. Reported so a publisher can see where a copy
+            went without holding the target's credentials.
+        state:
+          type: string
+          description: State of the most recent mirroring attempt for this object.
+          enum:
+            - pending
+            - published
+            - failed
+        lastAttemptAt:
+          $ref: "#/components/schemas/date-time"
+        detail:
+          type: string
+          description: Why the last attempt failed, when it did.
+      required:
+        - uuid
+
+    artifact-signature:
+      type: object
+      description: |
+        A detached signature over an artifact format's bytes.
+
+        signatures/signature.md calls for an indication of the hash algorithm,
+        an indicator of the certificate used, and the intermediate and signing
+        certificates. This carries them, plus the transparency-log entry where
+        the scheme has one — a signature that is itself publicly logged is far
+        harder to backdate.
+      additionalProperties: false
+      properties:
+        signatureType:
+          type: string
+          description: The scheme, so a consumer knows how to verify rather than having to guess.
+          enum:
+            - jws
+            - jsf
+            - cose
+            - pgp
+            - x509-cms
+            - sigstore-bundle
+            - ssh
+        url:
+          type: string
+          format: url
+          description: Direct download URL for the detached signature.
+        algorithm:
+          type: string
+          description: Hash algorithm the signature was computed over, e.g. SHA-256.
+        keyId:
+          type: string
+          description: Key identifier the signature was produced with, where the scheme has one.
+        certificateUrl:
+          type: string
+          format: url
+          description: Signing certificate, where verification needs one.
+        certificateChainUrl:
+          type: string
+          format: url
+          description: Intermediate certificates between the signing certificate and a trusted root.
+        transparencyLogUrl:
+          type: string
+          format: url
+          description: Entry in a signature transparency log, such as Rekor.
+        signedAt:
+          $ref: "#/components/schemas/date-time"
+      required:
+        - signatureType
+        - url
+
+    access-policy-status:
+      type: object
+      description: An object's declared access policy alongside the one actually enforced.
+      additionalProperties: false
+      properties:
+        uuid:
+          description: The object the policy applies to.
+          $ref: "#/components/schemas/uuid"
+        declared:
+          description: |
+            What this object sets for itself. Absent when it declares nothing
+            and relies entirely on inheritance.
+          $ref: "#/components/schemas/access-policy"
+        effective:
+          description: What is enforced, after inheritance.
+          $ref: "#/components/schemas/access-policy"
+        inheritedFrom:
+          description: |
+            The ancestor the effective policy came from, when it was not
+            declared here. Naming it lets a publisher fix the cause rather than
+            the symptom.
+          $ref: "#/components/schemas/uuid"
+      required:
+        - uuid
+        - effective
+
+  parameters:
+    object-uuid:
+      name: uuid
+      in: path
+      required: true
+      description: UUID of the object.
+      schema:
+        $ref: "#/components/schemas/uuid"
+    artifact-uuid:
+      name: uuid
+      in: path
+      required: true
+      description: UUID of the TEA Artifact.
+      schema:
+        $ref: "#/components/schemas/uuid"
+    format-index:
+      name: formatIndex
+      in: path
+      required: true
+      description: |
+        Zero-based index of the format within the artifact's `formats` array.
+        Formats are addressed positionally because a media type is not unique
+        within an artifact — the same document is often published both
+        compressed and not.
+      schema:
+        type: integer
+        minimum: 0
+    idempotency-key:
+      name: Idempotency-Key
+      in: header
+      required: false
+      description: |
+        A client-chosen key that makes a create safe to retry.
+
+        Publication runs in release pipelines, and pipelines retry. Without
+        this, a timeout that actually succeeded produces a second object on the
+        next attempt — a duplicate discovered by a consumer rather than by the
+        publisher. A server supporting the key MUST return the original result
+        for a repeat of the same key rather than creating again.
+      schema:
+        type: string
+        maxLength: 255
+    content-digest:
+      name: Content-Digest
+      in: header
+      required: false
+      description: |
+        Digest of the request body per RFC 9530, e.g. `sha-256=:<base64>:`.
+        Where supplied, the server MUST verify it against the bytes received
+        and reject a mismatch rather than storing content that does not match
+        the checksum it will be published under.
+      schema:
+        type: string
+
+  responses:
+    object-deleted:
+      description: |
+        The object was deleted and is no longer resolvable through the
+        consumption API.
+    publisher-bad-request:
+      description: The request body is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/publisher-error-response"
+    publisher-unauthorized:
+      description: Authentication is required, or the credential was rejected.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/publisher-error-response"
+    publisher-forbidden:
+      description: |
+        Authenticated, but not entitled to perform this operation on this
+        object. Distinct from 401 on purpose: a publisher debugging a pipeline
+        needs to know whether the credential was rejected or the permission
+        was.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/publisher-error-response"
+    publisher-not-found:
+      description: No such object, or the caller may not see it.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/publisher-error-response"
+    publisher-conflict:
+      description: |
+        The request conflicts with the object's current state: a create that
+        would duplicate an existing natural key, an update against a version
+        since superseded, or an access policy wider than the object's parent.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/publisher-error-response"
+    publisher-payload-too-large:
+      description: The uploaded content exceeds the size this server accepts.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/publisher-error-response"
+    publisher-unsupported-media-type:
+      description: The supplied media type is not one this server accepts for the object.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/publisher-error-response"
+    product-written:
+      description: The product as the consumption API will serve it.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/product"
+    component-written:
+      description: The component as the consumption API will serve it.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/component"
+    product-release-written:
+      description: The product release as the consumption API will serve it.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/productRelease"
+    component-release-written:
+      description: The component release as the consumption API will serve it.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/release"
+    collection-written:
+      description: The newly published collection version.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/collection"
+    artifact-written:
+      description: The artifact as the consumption API will serve it.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/artifact"
+    access-policy-read:
+      description: The access policy in force for the object.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/access-policy-status"
+
+  requestBodies:
+    write-product:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            properties:
+              name:
+                type: string
+                description: Product name.
+              identifiers:
+                type: array
+                description: |
+                  Identifiers for the product. A server assigns the TEI itself
+                  — it names the server's own authority over the object, so a
+                  publisher supplying one would be asserting something only the
+                  server can know.
+                items:
+                  $ref: "#/components/schemas/identifier"
+              accessPolicy:
+                $ref: "#/components/schemas/access-policy"
+    write-component:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            properties:
+              name:
+                type: string
+                description: Component name.
+              identifiers:
+                type: array
+                items:
+                  $ref: "#/components/schemas/identifier"
+              accessPolicy:
+                $ref: "#/components/schemas/access-policy"
+    write-product-release:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            properties:
+              product:
+                description: UUID of the product this release belongs to.
+                $ref: "#/components/schemas/uuid"
+              version:
+                type: string
+                description: Version of the release.
+              releaseDate:
+                $ref: "#/components/schemas/date-time"
+              preRelease:
+                type: boolean
+                description: Whether this release is a pre-release.
+              identifiers:
+                type: array
+                items:
+                  $ref: "#/components/schemas/identifier"
+              accessPolicy:
+                $ref: "#/components/schemas/access-policy"
+    write-component-release:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            properties:
+              component:
+                description: UUID of the component this release belongs to.
+                $ref: "#/components/schemas/uuid"
+              version:
+                type: string
+                description: Version of the release.
+              releaseDate:
+                $ref: "#/components/schemas/date-time"
+              preRelease:
+                type: boolean
+                description: Whether this release is a pre-release.
+              identifiers:
+                type: array
+                items:
+                  $ref: "#/components/schemas/identifier"
+              accessPolicy:
+                $ref: "#/components/schemas/access-policy"
+    write-collection:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            properties:
+              updateReason:
+                description: Why this version was published.
+                $ref: "#/components/schemas/collection-update-reason"
+              accessPolicy:
+                $ref: "#/components/schemas/access-policy"
+            required:
+              - updateReason
+    write-artifact:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            properties:
+              collection:
+                description: |
+                  UUID of the collection this artifact belongs to, which is the
+                  UUID of its release.
+                $ref: "#/components/schemas/uuid"
+              name:
+                type: string
+                description: Human-readable name of the artifact.
+              type:
+                $ref: "#/components/schemas/artifact-type"
+              formats:
+                type: array
+                description: |
+                  The representations this artifact is published in. A format
+                  may carry a `url` when the publisher hosts the bytes itself;
+                  otherwise they are uploaded to this server afterwards.
+                items:
+                  $ref: "#/components/schemas/artifact-format"
+              accessPolicy:
+                $ref: "#/components/schemas/access-policy"
+            required:
+              - collection
+              - name
+              - formats
+    update-artifact:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            description: |
+              Metadata only. Stored bytes are immutable — replacing content
+              means a new format or a new artifact, not an overwrite.
+            properties:
+              name:
+                type: string
+              type:
+                $ref: "#/components/schemas/artifact-type"
+              accessPolicy:
+                $ref: "#/components/schemas/access-policy"
+
+tags:
+  - name: TEA Publication
+    description: |
+      Operations that create, update and delete the objects the consumption API
+      serves.
+  - name: TEA Access Policy
+    description: |
+      Operations controlling who may read an object through the consumption
+      API: the publishing organisation alone, named counterparties, or anyone.

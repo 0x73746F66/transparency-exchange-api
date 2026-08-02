@@ -1,0 +1,61 @@
+name: Publisher Spec Sync
+
+# The publisher document is generated from the consumption specification plus
+# spec/publisher/overlay.yaml. It was previously a hand-maintained copy and
+# drifted four minor versions behind, carrying duplicate definitions of shared
+# objects under different names. This job fails if it drifts again.
+
+on:
+    push:
+        branches: ['main']
+    pull_request:
+    workflow_dispatch:
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+    check:
+        name: Publisher spec is in sync
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '22'
+
+            - name: Install
+              working-directory: spec/publisher
+              run: npm ci || npm install
+
+            - name: Rebuild and compare
+              working-directory: spec/publisher
+              run: npm run check
+
+            - name: Lint the generated document
+              working-directory: spec/publisher
+              # The consumption specification currently carries 24 lint errors
+              # of its own (23 missing operation summaries, one OpenAPI 3.0
+              # `nullable`). The overlay adds none, so this compares the two
+              # counts rather than requiring zero, and fails only if the
+              # publisher document is worse than the spec it is built from.
+              run: |
+                  set -o pipefail
+                  count() {
+                    npx redocly lint "$1" --format=json 2>/dev/null \
+                      | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const j=JSON.parse(s);console.log(j.problems.filter(p=>p.severity==="error").length)})'
+                  }
+                  base=$(count ../openapi.yaml)
+                  pub=$(count openapi.yaml)
+                  echo "consumption errors: $base, publisher errors: $pub"
+                  if [ "$pub" -gt "$base" ]; then
+                    echo "The publication overlay introduced $((pub - base)) new error(s)."
+                    npx redocly lint openapi.yaml
+                    exit 1
+                  fi
