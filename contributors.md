@@ -11,9 +11,9 @@ work during our meetings and workshops. They are noted here in alphabetic order:
 * Olle E. Johansson, Project lead, Edvina AB, Sweden, oej@edvina.net
 * Christopher Langton
 * Mark Symons
-* Paul Horton
+* Paul Horton, Sonatype Inc., paul.horton@owasp.org, [@madaph](https://github.com/madpah)
 * Pavel Shukhman, Reliza, Canada, pavel@reliza.io
 * Piotr P. Karwasz, The Apache Software Foundation, pkarwasz-ecma@apache.org
 * Steve Springett
 * Valerio Mulas
-* Viktor Peterson
+* Viktor Petersson, sbomify, United Kingdom, hello@sbomify.com

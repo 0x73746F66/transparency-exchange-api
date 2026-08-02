@@ -1,64 +1,72 @@
 # Transparency Exchange API - Discovery
 
-**NOTE**: _This is a proposal for the WG_
-
 - [From product identifier to API endpoint](#from-product-identifier-to-api-endpoint)
+- [Advertising the TEI](#advertising-the-tei)
 - [TEA Discovery - defining an extensible identifier](#tea-discovery---defining-an-extensible-identifier)
 - [The TEI URN: An extensible identifier](#the-tei-urn-an-extensible-identifier)
   - [TEI syntax](#tei-syntax)
   - [TEI types](#tei-types)
   - [TEI resolution using DNS](#tei-resolution-using-dns)
-  - [Finding the Index using DNS result](#finding-the-index-using-dns-result)
+- [Connecting to the API](#connecting-to-the-api)
+  - [Overview: Finding the Index using DNS result](#overview-finding-the-index-using-dns-result)
 - [The TEA Version Index](#the-tea-version-index)
 - [References](#references)
 
 ## From product identifier to API endpoint
 
-TEA Discovery is the connection between a product identifier and the API endpoint.
-A "product" is something that the customer aquires or downloads. It can be a bundle
-of many digital devices or software applications. A "product" normally also has an
-entry in a large corporation's asset inventory system.
+TEA Discovery is the connection between a product release identifier and the API endpoint.
+A "product release" is something that the customer aquires or downloads - hardware and/or software.
 
-A product identifier is embedded in a URN where the identifier is one of many existing
+It can be a bundle of many digital devices or software applications.
+A "product release" normally also has an entry in a large corporation's asset inventory system.
+
+A product release identifier is embedded in a URN where the identifier is one of many existing
 identifiers or a random string - like an EAN or UPC bar code, UUID, product
 number or PURL.
 
 The goal is for a user to add this URN to the transparency platform (sometimes with an
-associated authentication token) and have the platform access the required artifacts
+associated authentication token) and have the platform access the required artefacts
 in a highly automated fashion.
 
 ## Advertising the TEI
 
-The TEI for a product can be communicated to the user in many ways.
+The TEI for a product release can be communicated to the user in many ways.
 
 - A QR code on a box
 - On the invoice or delivery note
 - For software with a GUI, in an "about" box
 
+The user needs to get the TEI from the manufacturer, through a reseller or directly. The TEI
+is defined by the manufacturer and can normally not be derived from known information.
+
 ## TEA Discovery - defining an extensible identifier
 
-TEA discovery is the process where a user with a product identifier can discover and download
-artifacts automatically, with or without authentication. A globally unique identifier is
-required for a given product. This identifier is called the Transparency Exchange Identifier (TEI).
+TEA discovery is the process where a user with a product release identifier can discover and download
+artefacts automatically, with or without authentication. A globally unique identifier is
+required for a given product release. This identifier is called the Transparency Exchange Identifier (TEI).
 
 The TEI identifier is based on DNS, which assures a uniqueness per vendor (or open source project)
-and gives the vendor a name space to define product identifiers based on existing or new identifiers
-like EAN/UPC bar code, PURLs or other existing schemes. A given product may have multiple identifiers
+and gives the vendor a namespace to define product release identifiers based on existing or new identifiers
+like EAN/UPC bar code, PURLs or other existing schemes. A given product release may have multiple identifiers
 as long as they all resolve into the same destination.
+
+The vendor needs to make sure that the TEI is unique within the vendor's namespace. There is no
+intention to create any TEI registries.
 
 ## The TEI URN: An extensible identifier
 
-The TEI, Transparency Exchange Identifier, is a URN schema that is extensible based on existing
+The TEI, __Transparency Exchange Identifier__, is a URN schema that is extensible based on existing
 identifiers like EAN codes, PURL and other identifiers. It is based on a DNS name, which leads
 to global uniqueness without new registries.
 
 The TEI can be shown in the software itself, in shipping documentation, in web pages and app stores.
-TEI is unique for a product, not a version of a software. The TEI consist of three core parts
 
-A TEI belongs to a single product. A product can have multiple TEIs - like one with a EAN/UPC
+A TEI belongs to a single product release. A product release can have multiple TEIs - like one with a EAN/UPC
 barcode and one with the vendor's product number.
 
 ### TEI syntax
+
+The TEI consists of three core parts
 
 ```text
 urn:tei:<type>:<domain-name>:<unique-identifier>
@@ -102,7 +110,7 @@ Syntax:
 
 ```text
 urn:tei:swid:<domain-name>:<swid>
-````
+```
 
 Note that there is a TEI SWID type as well as a PURL SWID type.
 
@@ -140,12 +148,73 @@ Example:
 urn:tei:uuid:cyclonedx.org:d4d9f54a-abcf-11ee-ac79-1a52914d44b1
 ```
 
+#### EAN/UPC
 
-#### Other types to be defined
+Where the `unique-identifier` is a EAN/UPC.
 
-- EAN
-- GS1
-- STD
+Syntax:
+
+```text
+urn:tei:eanupc:<domain-name>:<ean/upc-number>
+````
+
+Example:
+```text
+urn:tei:eanupc:cyclonedx.org:1234567890123
+```
+
+#### GTIN
+
+Where the `unique-identifier` is a [GTIN](https://www.gs1.org/standards/id-keys/gtin).
+
+Syntax:
+
+```text
+urn:tei:gtin:<domain-name>:<gtin-number>
+````
+
+Example:
+```text
+urn:tei:gtin:cyclonedx.org:0234567890123
+```
+
+#### ASIN
+
+Where the `unique-identifier` is a [ASIN](https://sell.amazon.com/blog/what-is-an-asin).
+
+Syntax:
+
+```text
+urn:tei:asin:<domain-name>:<asin-identifier>
+````
+
+Example:
+```text
+urn:tei:asin:cyclonedx.org:B07FZ8S74R
+```
+
+
+#### UDI
+
+Where the `unique-identifier` is a [UDI](https://www.gs1.org/industries/healthcare/udi).
+
+Syntax:
+
+```text
+urn:tei:udi:<domain-name>:<udi-identifier>
+````
+
+Example:
+```text
+urn:tei:udi:cyclonedx.org:00123456789012
+```
+
+Note that if the same identifier, like EAN, is used for multiple different product releases
+then this EAN code will not be unique for a given product. While this case is supported
+by TEA, the vendor is recommended to create a separate TEI for each unique product sold,
+like UUID or hash. In any case, the vendor SHOULD minimize the number of distinct product
+releases returned per TEI. Preferable situation is to have a single product release
+per TEI.
 
 ### TEI resolution using DNS
 
@@ -160,49 +229,119 @@ This is solved by using the ".well-known" name space as defined by the IETF.
 
 The name in the DNS name part points to a set of DNS records.
 
-A TEI with name `tea.example.com` queries for `tea.example.com` `A` and `AAAA` records.
+A TEI with `domain-name` `tea.example.com` queries DNS for `tea.example.com`, considering `A`, `AAAA` and `CNAME` records.
 These point to the hosts available for the Transparency Exchange API.
 
-The TEA client connects to the host using HTTPS and validates the certificate.
-The URI is composed of the name with the `/.well-known/tea` prefix added.
+The TEA client connects to the host using HTTPS and validates
+the certificate. The URL is composed of the host name with the `/.well-known/tea` path added.
 
-This results in the base URI (without the product identifier) 
-`https://tea.example.com/.well-known/tea/` 
+This results in the base URL such as
+`https://products.example.com/.well-known/tea`
 
+This response must contain json object that lists the available TEA server endpoints and supported versions.
+The json must conform to the [TEA Well-Known Schema](tea-well-known.schema.json).
+
+Example:
+```json
+{
+  "schemaVersion": 1,
+  "endpoints": [
+    {
+      "url": "https://api.teaexample.com",
+      "versions": 
+        [
+          "0.1.0-beta.1",
+          "0.2.0-beta.2",
+          "1.0.0"
+        ],
+      "priority": 1
+    },
+    {
+      "url": "https://api2.teaexample.com/mytea",
+      "versions": 
+        [
+          "1.0.0"
+        ],
+      "priority": 0.5
+    }
+  ]
+}
+```
+
+## Port resolution
+
+Currently, the port number is not part of the TEI but it is needed to connect to the API.
+A port number cannot be added to the TEI URN spec as it breaks the location independence
+requirement of URN.
+
+The TEA API server may be hosted on any port, but the server that is part of the
+first step of discovery will by default be running on the default HTTPS port 443.
+In the JSON file found there, the server URLs may contain port numbers.
+
+If the clients are known to support HTTPS/SVCB DNS records for failover and
+load balancing, these may be used to redirect to other ports and servers.
+
+Public servers are recommended to have the server hosting the DNS name used
+in the TEI URI running on the default port to enable discovery of the API servers.
 
 ## Connecting to the API
 
-When connecting to the `.well-known/tea` URI with the unique identifier
-a HTTP redirect is **required**.
+Clients must pick any one of the endpoints listed in the `.well-known/tea` json
+response. The client MUST pick an endpoint with the at least one version that is
+supported by the client is using. The client MUST prioritize endpoints with the
+highest matching version supported both by the client and the endpoint based on
+SemVer 2.0.0 specification comparison [rules](https://semver.org/#spec-item-11).
+If there are several endpoints like these and if the priority field is present,
+the client SHOULD pick the endpoint with the highest priority value (a float
+between 0 and 1).
 
-The server MUST redirect HTTP requests for that resource
-to the actual "context path" using one of the available mechanisms
-provided by HTTP (e.g., using a 301, 303, or 307 response).  Clients
-MUST handle HTTP redirects on the `.well-known` URI.  Servers MUST
-NOT locate the actual TEA service endpoint at the
+The client must then construct the full URL to the API by appending the
+"/v" plus one of the versions listed in the `versions` array of the selected endpoint,
+plus "/discovery?tei=", plus the TEI that is url-encoded according to [RFC3986]
+and [RFC3986]).
+
+Examples:
+1. For TEI `urn:tei:uuid:products.example.com:d4d9f54a-abcf-11ee-ac79-1a52914d44b`
+`https://api.teaexample.com/v0.2.0-beta.2/discovery?tei=urn%3Atei%3Auuid%3Aproducts.example.com%3Ad4d9f54a-abcf-11ee-ac79-1a52914d44b`
+2. For TEI `urn:tei:purl:products.example.com:pkg:deb/debian/curl@7.50.3-1?arch=i386&distro=jessie`
+`https://api2.teaexample.com/mytea/v1.0.0/discovery?tei=urn%3Atei%3Apurl%3Aproducts.example.com%3Apkg%3Adeb%2Fdebian%2Fcurl%407.50.3-1%3Farch%3Di386%26distro%3Djessie`
+
+The discovery endpoint is a part of the TEA OpenAPI specification.
+
+If the TEI is known to the TEA server, the discovery endpoint must return at least
+the product release uuid, the root URL of the TEA server, the list of supported
+versions, plus the response may have other fields based on the current version of
+the TEA OpenAPI specification.
+
+If the TEI is not known to the TEA server, the discovery endpoint must return a 404
+status code with a response describing the error.
+
+If the DNS record for the discovery endpoint cannot be resolved by the client, or
+the discovery endpoint fails with 5xx error code, or the TLS certificate cannot be validated,
+the client MUST retry the discovery endpoint with the next endpoint in the list, if another
+endpoint is present. While doing so the client SHOULD preserve the priority order if provided
+(from highest to lowest priority). If no other endpoint is available, the client MUST retry
+the discovery endpoint with the first endpoint in the list. The client SHOULD implement an
+exponential backoff strategy for retries.
+
+Client implementations needs to indicate authentication errors clearly to the users,
+to indicate that there are no updates. An expired token or TLS Client Cert will
+mean that new versions of a product or updated artefacts will not be accessed.
+Authentication error codes (401, 403) should not lead to failover to the next endpoint
+in the list.
+
+How this is communicated to the client users is implementation specific.
+
+## Notes Regarding .well-known
+Servers MUST NOT locate the actual TEA service endpoint at the
 `.well-known` URI as per Section 1.1 of [RFC5785].
 
-### Overview: Finding the Index using DNS result
+### TLS Encryption
 
-Append the product part of the TEI to the URI found
-
-- TEI: `urn:tei:uuid:products.example.com:d4d9f54a-abcf-11ee-ac79-1a52914d44b1`
-- DNS record: `products.example.com`
-- URL: `https://products.example.com/.well-known/tea/d4d9f54a-abcf-11ee-ac79-1a52914d44b1/`
-- HTTP 302 redirect to "https://teapot02.consumer.example.com/tea/v2/product-index/d4d9f54a-abcf-11ee-ac79-1a52914d44b1'
-
-Always prefix with the https:// scheme. http (unencrypted) is not valid.
+The .well-known endpoint must only be available via HTTPS. Using unencrypted HTTP is not valid.
 
 - TEI: `urn:tei:uuid:products.example.com:d4d9f54a-abcf-11ee-ac79-1a52914d44b1`
-- URL: `https://products.example.com/.well-known/tea/d4d9f54a-abcf-11ee-ac79-1a52914d44b1/`
-
-**NOTE:** The `/.well-known/tea`names space needs to be registred.
-
-## The TEA Version Index
-
-The resulting URL leads to the TEA version index, which is documented in another document.
-One redirect (302) is allowed in order to provide for aliasing, where a single product
-has many identifiers. The redirect should not lead to a separate web server.
+- URL: `https://products.example.com/.well-known/tea`
 
 ## References
 
