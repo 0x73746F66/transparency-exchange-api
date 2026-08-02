@@ -330,6 +330,82 @@ paths:
       tags:
         - TEA Publication
 
+  # ── Distributions ─────────────────────────────────────────────────────────
+  #
+  # A collection says what evidence exists about a release. A distribution says
+  # how the release is obtained. Publishing the first without the second leaves
+  # a consumer that resolved a TEI holding an SBOM and no download link.
+  #
+  # Attached to a component release because that is where the consumption
+  # schema defines them: `release.distributions` exists, `productRelease` has no
+  # such field. A publisher wanting download links therefore decomposes its
+  # product into at least one component — the model the consumption
+  # specification already assumes, not an extra requirement of this overlay.
+  /componentRelease/{uuid}/distribution:
+    post:
+      summary: Declare a distribution of a component release
+      operationId: createTeaDistribution
+      description: |
+        Declare one delivered form of this release: a file to download, or a
+        channel a user installs from.
+
+        Idempotent on the `url`, or on the `description` where a channel has no
+        single file to fetch — `brew install`, `scoop install`, `nix run`. A
+        pipeline that retries therefore updates the link rather than leaving a
+        consumer to choose between two identical ones.
+
+        At least one of `url` and `description` is required. A distribution
+        with neither is a UUID: it gives a consumer nothing to follow and
+        nothing to recognise.
+
+        Checksums are recorded verbatim. This server does not hold the bytes a
+        distribution points at, so it cannot verify them and does not claim to
+        have — which is why a publisher should copy the digests from the same
+        manifest its users verify against rather than recomputing them.
+      parameters:
+        - $ref: "#/components/parameters/object-uuid"
+        - $ref: "#/components/parameters/idempotency-key"
+      requestBody:
+        $ref: "#/components/requestBodies/write-distribution"
+      responses:
+        "201":
+          $ref: "#/components/responses/distribution-written"
+        "400":
+          $ref: "#/components/responses/publisher-bad-request"
+        "401":
+          $ref: "#/components/responses/publisher-unauthorized"
+        "403":
+          $ref: "#/components/responses/publisher-forbidden"
+        "404":
+          $ref: "#/components/responses/publisher-not-found"
+        "409":
+          $ref: "#/components/responses/publisher-conflict"
+      tags:
+        - TEA Publication
+  /distribution/{uuid}:
+    delete:
+      summary: Withdraw a distribution
+      operationId: deleteTeaDistribution
+      description: |
+        Stop advertising this download.
+
+        It does not unpublish whatever the URL pointed at, and it does not
+        reach anyone who already resolved it. Withdrawing a link is a statement
+        about what this catalogue advertises from now on, not a recall.
+      parameters:
+        - $ref: "#/components/parameters/object-uuid"
+      responses:
+        "204":
+          $ref: "#/components/responses/object-deleted"
+        "401":
+          $ref: "#/components/responses/publisher-unauthorized"
+        "403":
+          $ref: "#/components/responses/publisher-forbidden"
+        "404":
+          $ref: "#/components/responses/publisher-not-found"
+      tags:
+        - TEA Publication
+
   # ── Artifacts ─────────────────────────────────────────────────────────────
   /artifact:
     post:
@@ -941,6 +1017,12 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/artifact"
+    distribution-written:
+      description: The distribution as the consumption API will serve it.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/release-distribution"
     access-policy-read:
       description: The access policy in force for the object.
       content:
@@ -1053,6 +1135,58 @@ components:
                 $ref: "#/components/schemas/access-policy"
             required:
               - updateReason
+    write-distribution:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            description: |
+              `distributionId` is absent by design: the server assigns it, and
+              a publisher-supplied identifier would let one tenant claim
+              another's. It is derived from the release and the natural key
+              below, so re-publishing the same download is an update.
+            properties:
+              description:
+                type: string
+                description: |
+                  What this channel or format is, in terms a human choosing how
+                  to install would recognise. Required when there is no `url`,
+                  and used as the natural key in that case.
+              url:
+                type: string
+                format: url
+                description: |
+                  Direct download URL. Must be absolute and http(s): a relative
+                  path would resolve against the consumer's own origin, and
+                  other schemes ask a consumer to do something it did not
+                  request.
+              signatureUrl:
+                type: string
+                format: url
+                description: Direct download URL for the detached signature.
+              identifiers:
+                type: array
+                description: |
+                  Identifiers for this distribution specifically. Optional
+                  because several real channels have no accepted purl type —
+                  Homebrew and Scoop among them — and an identifier that names
+                  a coordinate which does not resolve is worse than none, since
+                  a consumer will follow it.
+                items:
+                  $ref: "#/components/schemas/identifier"
+              checksums:
+                type: array
+                description: |
+                  Recorded verbatim. This server does not hold the bytes and
+                  cannot verify them, so these are the publisher's assertion,
+                  not ours.
+                items:
+                  $ref: "#/components/schemas/checksum"
+            anyOf:
+              - required: [url]
+              - required: [description]
     write-artifact:
       required: true
       content:
