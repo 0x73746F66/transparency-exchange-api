@@ -1754,6 +1754,22 @@ components:
 security:
   - bearerAuth: []
   - basicAuth: []
+  # Authentication is optional, not absent.
+  #
+  # Every operation in this document is a read, and discovery has no step at
+  # which a credential could be obtained: a consumer takes the domain out of a
+  # TEI, fetches that host's discovery document, and calls the root it names.
+  # Requiring a credential of all three would close the only entry point the
+  # specification defines, so a server MUST be able to answer an anonymous
+  # request. What it answers with is a separate question — an object the caller
+  # is not entitled to is `OBJECT_UNKNOWN`, exactly as it is for an object that
+  # does not exist.
+  #
+  # A caller that does present a credential has asserted an identity, and a
+  # server MUST verify it rather than quietly downgrading to anonymous: an
+  # expired key that silently returns only public data is indistinguishable
+  # from a publisher having withdrawn everything.
+  - {}
 tags:
   - name: TEA Product
   - name: TEA Product Release

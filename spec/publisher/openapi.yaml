@@ -81,6 +81,9 @@ paths:
           $ref: "#/components/responses/publisher-conflict"
       tags:
         - TEA Publication
+      security:
+        - bearerAuth: []
+        - basicAuth: []
     delete:
       summary: Delete a TEA Product
       description: |
@@ -104,6 +107,9 @@ paths:
           $ref: "#/components/responses/publisher-not-found"
       tags:
         - TEA Publication
+      security:
+        - bearerAuth: []
+        - basicAuth: []
   /product/{uuid}/releases:
     get:
       description: Get releases of the product
@@ -173,6 +179,9 @@ paths:
           $ref: "#/components/responses/publisher-not-found"
       tags:
         - TEA Publication
+      security:
+        - bearerAuth: []
+        - basicAuth: []
     delete:
       summary: Delete a TEA Product Release
       operationId: deleteTeaProductRelease
@@ -190,6 +199,9 @@ paths:
           $ref: "#/components/responses/publisher-not-found"
       tags:
         - TEA Publication
+      security:
+        - bearerAuth: []
+        - basicAuth: []
   /productRelease/{uuid}/cle:
     get:
       description: Get the CLE (Common Lifecycle Enumeration) data for a TEA Product Release
@@ -321,6 +333,9 @@ paths:
           $ref: "#/components/responses/publisher-conflict"
       tags:
         - TEA Publication
+      security:
+        - bearerAuth: []
+        - basicAuth: []
     delete:
       summary: Delete a TEA Component
       description: Delete a component and its releases.
@@ -338,6 +353,9 @@ paths:
           $ref: "#/components/responses/publisher-not-found"
       tags:
         - TEA Publication
+      security:
+        - bearerAuth: []
+        - basicAuth: []
   /component/{uuid}/releases:
     get:
       description: Get releases of the component
@@ -467,6 +485,9 @@ paths:
           $ref: "#/components/responses/publisher-not-found"
       tags:
         - TEA Publication
+      security:
+        - bearerAuth: []
+        - basicAuth: []
     delete:
       summary: Delete a TEA Component Release
       operationId: deleteTeaComponentRelease
@@ -484,6 +505,9 @@ paths:
           $ref: "#/components/responses/publisher-not-found"
       tags:
         - TEA Publication
+      security:
+        - bearerAuth: []
+        - basicAuth: []
   /componentRelease/{uuid}/cle:
     get:
       description: Get the CLE (Common Lifecycle Enumeration) data for a TEA Component Release
@@ -765,6 +789,9 @@ paths:
           $ref: "#/components/responses/publisher-conflict"
       tags:
         - TEA Publication
+      security:
+        - bearerAuth: []
+        - basicAuth: []
   /component:
     post:
       summary: Create a TEA Component
@@ -787,6 +814,9 @@ paths:
           $ref: "#/components/responses/publisher-conflict"
       tags:
         - TEA Publication
+      security:
+        - bearerAuth: []
+        - basicAuth: []
   /productRelease:
     post:
       summary: Create a TEA Product Release
@@ -809,6 +839,9 @@ paths:
           $ref: "#/components/responses/publisher-conflict"
       tags:
         - TEA Publication
+      security:
+        - bearerAuth: []
+        - basicAuth: []
   /componentRelease:
     post:
       summary: Create a TEA Component Release
@@ -831,6 +864,9 @@ paths:
           $ref: "#/components/responses/publisher-conflict"
       tags:
         - TEA Publication
+      security:
+        - bearerAuth: []
+        - basicAuth: []
   /productRelease/{uuid}/collection:
     put:
       summary: Publish a new collection version for a product release
@@ -859,6 +895,9 @@ paths:
           $ref: "#/components/responses/publisher-not-found"
       tags:
         - TEA Publication
+      security:
+        - bearerAuth: []
+        - basicAuth: []
   /componentRelease/{uuid}/collection:
     put:
       summary: Publish a new collection version for a component release
@@ -883,6 +922,9 @@ paths:
           $ref: "#/components/responses/publisher-not-found"
       tags:
         - TEA Publication
+      security:
+        - bearerAuth: []
+        - basicAuth: []
   /componentRelease/{uuid}/distribution:
     post:
       summary: Declare a distribution of a component release
@@ -924,6 +966,9 @@ paths:
           $ref: "#/components/responses/publisher-conflict"
       tags:
         - TEA Publication
+      security:
+        - bearerAuth: []
+        - basicAuth: []
   /distribution/{uuid}:
     delete:
       summary: Withdraw a distribution
@@ -947,6 +992,9 @@ paths:
           $ref: "#/components/responses/publisher-not-found"
       tags:
         - TEA Publication
+      security:
+        - bearerAuth: []
+        - basicAuth: []
   /artifact:
     post:
       summary: Create a TEA Artifact
@@ -978,6 +1026,9 @@ paths:
           $ref: "#/components/responses/publisher-conflict"
       tags:
         - TEA Publication
+      security:
+        - bearerAuth: []
+        - basicAuth: []
   /artifact/{uuid}:
     patch:
       summary: Update a TEA Artifact
@@ -1005,6 +1056,9 @@ paths:
           $ref: "#/components/responses/publisher-not-found"
       tags:
         - TEA Publication
+      security:
+        - bearerAuth: []
+        - basicAuth: []
     delete:
       summary: Delete a TEA Artifact
       operationId: deleteTeaArtifact
@@ -1022,6 +1076,9 @@ paths:
           $ref: "#/components/responses/publisher-not-found"
       tags:
         - TEA Publication
+      security:
+        - bearerAuth: []
+        - basicAuth: []
   /artifact/{uuid}/format/{formatIndex}/content:
     put:
       summary: Upload artifact content
@@ -1078,6 +1135,9 @@ paths:
           $ref: "#/components/responses/publisher-unsupported-media-type"
       tags:
         - TEA Publication
+      security:
+        - bearerAuth: []
+        - basicAuth: []
   /artifact/{uuid}/format/{formatIndex}/signature:
     put:
       summary: Attach a detached signature to an artifact format
@@ -1114,6 +1174,182 @@ paths:
           $ref: "#/components/responses/publisher-unsupported-media-type"
       tags:
         - TEA Publication
+      security:
+        - bearerAuth: []
+        - basicAuth: []
+  /publicationTargets:
+    get:
+      summary: List registered publication targets
+      operationId: listTeaPublicationTargets
+      description: The remote servers this organisation may mirror objects to.
+      parameters:
+        - $ref: "#/components/parameters/page-size"
+        - $ref: "#/components/parameters/page-token"
+        - $ref: "#/components/parameters/sort-order"
+      responses:
+        "200":
+          $ref: "#/components/responses/paginated-publication-target"
+        "400":
+          $ref: "#/components/responses/publisher-bad-request"
+        "401":
+          $ref: "#/components/responses/publisher-unauthorized"
+        "403":
+          $ref: "#/components/responses/publisher-forbidden"
+        "501":
+          $ref: "#/components/responses/publisher-mirroring-unsupported"
+      tags:
+        - TEA Publication Target
+      security:
+        - bearerAuth: []
+        - basicAuth: []
+    post:
+      summary: Register a publication target
+      operationId: createTeaPublicationTarget
+      description: |
+        Register a remote TEA server this organisation may mirror to.
+
+        A server SHOULD verify the target before accepting it — that the root
+        answers, advertises a compatible version, and accepts the credential —
+        so that a target which was never going to work fails here, in front of
+        whoever configured it, rather than later inside an asynchronous mirror
+        nobody is watching.
+      parameters:
+        - $ref: "#/components/parameters/idempotency-key"
+      requestBody:
+        $ref: "#/components/requestBodies/write-publication-target"
+      responses:
+        "201":
+          $ref: "#/components/responses/publication-target-written"
+        "400":
+          $ref: "#/components/responses/publisher-bad-request"
+        "401":
+          $ref: "#/components/responses/publisher-unauthorized"
+        "403":
+          $ref: "#/components/responses/publisher-forbidden"
+        "409":
+          $ref: "#/components/responses/publisher-conflict"
+        "501":
+          $ref: "#/components/responses/publisher-mirroring-unsupported"
+      tags:
+        - TEA Publication Target
+      security:
+        - bearerAuth: []
+        - basicAuth: []
+  /publicationTargets/{uuid}:
+    get:
+      summary: Read a publication target
+      operationId: getTeaPublicationTarget
+      description: The target as registered. The credential is never returned.
+      parameters:
+        - $ref: "#/components/parameters/object-uuid"
+      responses:
+        "200":
+          $ref: "#/components/responses/publication-target-written"
+        "401":
+          $ref: "#/components/responses/publisher-unauthorized"
+        "403":
+          $ref: "#/components/responses/publisher-forbidden"
+        "404":
+          $ref: "#/components/responses/publisher-not-found"
+      tags:
+        - TEA Publication Target
+      security:
+        - bearerAuth: []
+        - basicAuth: []
+    delete:
+      summary: Deregister a publication target
+      operationId: deleteTeaPublicationTarget
+      description: |
+        Stop mirroring to this target and discard its credential.
+
+        It does not recall the copies already sent. The target holds them under
+        its own policy, which is what mirroring means, so removing a target is
+        a statement about future copies only.
+
+        A server MUST also remove the target from any `publishTo` naming it,
+        rather than leaving policies pointing at a target that no longer
+        exists.
+      parameters:
+        - $ref: "#/components/parameters/object-uuid"
+      responses:
+        "204":
+          $ref: "#/components/responses/object-deleted"
+        "401":
+          $ref: "#/components/responses/publisher-unauthorized"
+        "403":
+          $ref: "#/components/responses/publisher-forbidden"
+        "404":
+          $ref: "#/components/responses/publisher-not-found"
+      tags:
+        - TEA Publication Target
+      security:
+        - bearerAuth: []
+        - basicAuth: []
+  /publications:
+    get:
+      summary: List the products this organisation has published
+      operationId: listTeaPublications
+      description: |
+        The caller's own products, each with the access policy actually in
+        force and the number of releases beneath it.
+
+        Paginated on the same terms as the consumption listings, because a
+        catalogue large enough to be worth reconciling is large enough to need
+        it.
+      parameters:
+        - $ref: "#/components/parameters/page-size"
+        - $ref: "#/components/parameters/page-token"
+        - $ref: "#/components/parameters/sort-field-product"
+        - $ref: "#/components/parameters/sort-order"
+      responses:
+        "200":
+          $ref: "#/components/responses/paginated-publication"
+        "400":
+          $ref: "#/components/responses/publisher-bad-request"
+        "401":
+          $ref: "#/components/responses/publisher-unauthorized"
+        "403":
+          $ref: "#/components/responses/publisher-forbidden"
+      tags:
+        - TEA Publication
+      security:
+        - bearerAuth: []
+        - basicAuth: []
+  /publications/{uuid}/releases:
+    get:
+      summary: List the releases published under a product
+      operationId: listTeaPublishedReleases
+      description: |
+        The releases of one of the caller's own products, each with the policy
+        in force, the current collection version and how many artifacts it
+        holds.
+
+        The collection version is what makes this worth having separately from
+        the consumption listing: a release whose collection is still at version
+        0 has been created and never populated, which is invisible to a
+        consumer and is exactly the state a publisher wants to find.
+      parameters:
+        - $ref: "#/components/parameters/object-uuid"
+        - $ref: "#/components/parameters/page-size"
+        - $ref: "#/components/parameters/page-token"
+        - $ref: "#/components/parameters/sort-field-product-release"
+        - $ref: "#/components/parameters/sort-order"
+      responses:
+        "200":
+          $ref: "#/components/responses/paginated-published-release"
+        "400":
+          $ref: "#/components/responses/publisher-bad-request"
+        "401":
+          $ref: "#/components/responses/publisher-unauthorized"
+        "403":
+          $ref: "#/components/responses/publisher-forbidden"
+        "404":
+          $ref: "#/components/responses/publisher-not-found"
+      tags:
+        - TEA Publication
+      security:
+        - bearerAuth: []
+        - basicAuth: []
   /accessPolicy/{uuid}:
     get:
       summary: Read the access policy in force for an object
@@ -1137,6 +1373,9 @@ paths:
           $ref: "#/components/responses/publisher-not-found"
       tags:
         - TEA Access Policy
+      security:
+        - bearerAuth: []
+        - basicAuth: []
     put:
       summary: Set the access policy for an object
       operationId: setTeaAccessPolicy
@@ -1144,12 +1383,17 @@ paths:
         Replace the object's own access policy.
 
         A server MUST reject a policy wider than the effective policy of the
-        object's parent, with `ACCESS_WIDENS_PARENT`. A server SHOULD require
-        a separate confirmation for a change to `public`, because no later
+        object's parent, with `ACCESS_WIDENS_PARENT`.
+
+        A change to `public` MUST carry `confirm=public`, because no later
         request undoes it: whatever was fetched while it was public stays
-        fetched.
+        fetched. Naming the mechanism rather than only asking for "a
+        confirmation" is deliberate — an unspecified requirement is one every
+        publisher satisfies differently, which is the failure this document
+        exists to avoid.
       parameters:
         - $ref: "#/components/parameters/object-uuid"
+        - $ref: "#/components/parameters/confirm-public"
       requestBody:
         required: true
         content:
@@ -1171,6 +1415,9 @@ paths:
           $ref: "#/components/responses/publisher-conflict"
       tags:
         - TEA Access Policy
+      security:
+        - bearerAuth: []
+        - basicAuth: []
 components:
   schemas:
     date-time:
@@ -2170,6 +2417,8 @@ components:
         - PAYLOAD_TOO_LARGE
         - CHECKSUM_MISMATCH
         - SIGNATURE_INVALID
+        - MIRRORING_UNSUPPORTED
+        - UNKNOWN_PUBLICATION_TARGET
     publisher-error-response:
       type: object
       description: |
@@ -2243,11 +2492,20 @@ components:
         publishTo:
           type: array
           description: |
-            Remote TEA servers this object is mirrored to. Mirroring is a copy,
-            not a reference: once an object reaches another server, this
-            server's policy no longer governs it.
+            Registered publication targets this object is mirrored to, by
+            UUID. Mirroring is a copy, not a reference: once an object reaches
+            another server, this server's policy no longer governs it, which is
+            why a target has to be registered deliberately rather than named
+            inline by URL.
+
+            A server that does not mirror MUST reject a non-empty list with
+            `MIRRORING_UNSUPPORTED`. Accepting it and doing nothing is the one
+            unacceptable response, because the publisher would then believe a
+            copy exists somewhere it does not.
+
+            Naming a target that is not registered is `UNKNOWN_PUBLICATION_TARGET`.
           items:
-            $ref: "#/components/schemas/publication-target"
+            $ref: "#/components/schemas/uuid"
       required:
         - visibility
     share-grant:
@@ -2273,21 +2531,75 @@ components:
         - organizationUuid
     publication-target:
       type: object
-      description: A remote TEA server this publisher mirrors objects to.
+      description: |
+        A remote TEA server this publisher mirrors objects to, as this server
+        holds it.
+
+        Registered as its own object rather than named inline in a policy for
+        two reasons. A credential is involved, and a credential repeated in
+        every policy is a credential in every audit log. And mirroring is a
+        copy the receiving server then governs, so which servers a publisher is
+        willing to hand objects to is a decision worth making once and
+        reviewing, not one made in passing while setting a visibility.
       additionalProperties: false
       properties:
         uuid:
-          description: Identifier of a target already configured on this server.
+          description: Identifier of this target on this server.
           $ref: "#/components/schemas/uuid"
+        rootUrl:
+          type: string
+          format: uri
+          description: |
+            The remote server's TEA root, without a trailing slash — the same
+            value that server advertises as `rootUrl` in its own discovery
+            document.
         domain:
           type: string
           description: |
             The TEI domain-name component of the target, which is what a
-            consumer resolves. Reported so a publisher can see where a copy
-            went without holding the target's credentials.
+            consumer resolves. Derived from `rootUrl` and reported so a
+            publisher can see where a copy went.
+        description:
+          type: string
+          description: What this target is, for whoever reviews the list later.
+        credential:
+          type: string
+          writeOnly: true
+          description: |
+            Bearer credential this server presents when publishing to the
+            target. Write-only: a server MUST NOT return it, and MUST NOT
+            report whether one is held in any form that distinguishes one
+            credential from another.
+        createdAt:
+          $ref: "#/components/schemas/date-time"
+      required:
+        - uuid
+        - rootUrl
+    mirror-status:
+      type: object
+      description: |
+        The state of mirroring one object to one target.
+
+        Reported rather than set: a publisher states where an object should go
+        and the server reports how far it got. A publisher that cannot see a
+        failed mirror has to discover it from the counterparty.
+      additionalProperties: false
+      properties:
+        target:
+          description: The publication target this state refers to.
+          $ref: "#/components/schemas/uuid"
+        domain:
+          type: string
+          description: The target's TEI domain, repeated so a reader need not resolve the UUID.
         state:
           type: string
-          description: State of the most recent mirroring attempt for this object.
+          description: |
+            State of the most recent attempt.
+
+            `pending` — accepted locally, not yet copied. `published` — the
+            target acknowledged it. `failed` — the last attempt did not
+            succeed and `detail` says why; the server SHOULD retry, and MUST
+            NOT silently give up without leaving this state visible.
           enum:
             - pending
             - published
@@ -2298,7 +2610,8 @@ components:
           type: string
           description: Why the last attempt failed, when it did.
       required:
-        - uuid
+        - target
+        - state
     artifact-signature:
       type: object
       description: |
@@ -2371,9 +2684,99 @@ components:
             declared here. Naming it lets a publisher fix the cause rather than
             the symptom.
           $ref: "#/components/schemas/uuid"
+        mirrors:
+          type: array
+          description: |
+            How far mirroring has got, per target. Absent where the object is
+            mirrored nowhere, or where the server does not mirror at all.
+          items:
+            $ref: "#/components/schemas/mirror-status"
       required:
         - uuid
         - effective
+    publication:
+      type: object
+      description: |
+        One product this organisation has published, as the consumption API
+        serves it, alongside the access policy in force for it.
+
+        The product is carried whole rather than flattened so that a publisher
+        can compare it byte for byte against what `GET /product/{uuid}`
+        returns; a summary in a different shape would have to be trusted rather
+        than checked.
+      additionalProperties: false
+      properties:
+        product:
+          $ref: "#/components/schemas/product"
+        accessPolicy:
+          description: Declared and effective policy, so the gap between them is visible here too.
+          $ref: "#/components/schemas/access-policy-status"
+        releaseCount:
+          type: integer
+          minimum: 0
+          description: How many releases exist beneath this product.
+      required:
+        - product
+        - accessPolicy
+    published-release:
+      type: object
+      description: One release this organisation has published, with what a consumer would find in it.
+      additionalProperties: false
+      properties:
+        release:
+          $ref: "#/components/schemas/productRelease"
+        accessPolicy:
+          $ref: "#/components/schemas/access-policy-status"
+        collectionVersion:
+          type: integer
+          minimum: 0
+          description: |
+            Version of this release's current collection, or 0 where no
+            collection has been published yet — a release a consumer can
+            resolve and find nothing in.
+        artifactCount:
+          type: integer
+          minimum: 0
+          description: How many artifacts the current collection holds.
+      required:
+        - release
+        - accessPolicy
+    paginated-publication-target-response:
+      description: A paginated response containing registered publication targets
+      allOf:
+        - $ref: "#/components/schemas/pagination-details"
+        - type: object
+          properties:
+            results:
+              type: array
+              items:
+                $ref: "#/components/schemas/publication-target"
+          required:
+            - results
+    paginated-publication-response:
+      description: A paginated response containing this organisation's published products
+      allOf:
+        - $ref: "#/components/schemas/pagination-details"
+        - type: object
+          properties:
+            results:
+              type: array
+              items:
+                $ref: "#/components/schemas/publication"
+          required:
+            - results
+    paginated-published-release-response:
+      description: A paginated response containing this organisation's published releases
+      allOf:
+        - $ref: "#/components/schemas/pagination-details"
+        - type: object
+          properties:
+            results:
+              type: array
+              items:
+                $ref: "#/components/schemas/published-release"
+          required:
+            - results
   responses:
     204-common-delete:
       description: Object deleted successfully
@@ -2472,6 +2875,15 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/publisher-error-response"
+    publisher-mirroring-unsupported:
+      description: |
+        This server does not mirror to other TEA servers. Answered rather than
+        quietly ignoring the request, so a publisher is never left believing a
+        copy exists somewhere it does not.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/publisher-error-response"
     publisher-payload-too-large:
       description: The uploaded content exceeds the size this server accepts.
       content:
@@ -2532,6 +2944,30 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/access-policy-status"
+    publication-target-written:
+      description: The publication target as registered, without its credential.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/publication-target"
+    paginated-publication-target:
+      description: A paginated response containing registered publication targets.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/paginated-publication-target-response"
+    paginated-publication:
+      description: A paginated response containing this organisation's published products.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/paginated-publication-response"
+    paginated-published-release:
+      description: A paginated response containing this organisation's published releases.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/paginated-published-release-response"
   parameters:
     page-size:
       name: pageSize
@@ -2656,6 +3092,21 @@ components:
       schema:
         type: integer
         minimum: 0
+    confirm-public:
+      name: confirm
+      in: query
+      required: false
+      description: |
+        Acknowledges an irreversible change. Required, with the value `public`,
+        on a request that sets `visibility` to `public`; ignored otherwise.
+
+        A server MUST reject such a request without it, so that publishing to
+        the open web is something a caller states outright rather than
+        something a mistyped field does on its behalf.
+      schema:
+        type: string
+        enum:
+          - public
     idempotency-key:
       name: Idempotency-Key
       in: header
@@ -2752,6 +3203,21 @@ components:
                 type: array
                 items:
                   $ref: "#/components/schemas/identifier"
+              components:
+                type: array
+                description: |
+                  The components this release is composed of, optionally
+                  pinning a specific component release.
+
+                  Present because the consumption specification lists
+                  `components` among `productRelease`'s required members: a
+                  publisher with no way to state it can only ever produce
+                  releases a server has to serve as an empty list, which is a
+                  claim about the product rather than a gap in the record.
+
+                  Omitted means unchanged on update, and empty on create.
+                items:
+                  $ref: "#/components/schemas/component-ref"
               accessPolicy:
                 $ref: "#/components/schemas/access-policy"
     write-component-release:
@@ -2779,6 +3245,37 @@ components:
                   $ref: "#/components/schemas/identifier"
               accessPolicy:
                 $ref: "#/components/schemas/access-policy"
+    write-publication-target:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            description: |
+              `uuid` and `domain` are absent by design: the server assigns the
+              first and derives the second from `rootUrl`, so the two cannot
+              disagree about which server a target actually is.
+            properties:
+              rootUrl:
+                type: string
+                format: uri
+                description: |
+                  The remote server's TEA root, without a trailing slash. Must
+                  be an absolute https URL — a mirror carries a credential, and
+                  sending one over http would publish it to the network as well
+                  as to the target.
+              description:
+                type: string
+                description: What this target is, for whoever reviews the list later.
+              credential:
+                type: string
+                writeOnly: true
+                description: |
+                  Bearer credential to present when publishing to the target.
+                  Never returned by any operation.
+            required:
+              - rootUrl
     write-collection:
       required: true
       content:
@@ -2874,6 +3371,20 @@ components:
                   otherwise they are uploaded to this server afterwards.
                 items:
                   $ref: "#/components/schemas/artifact-format"
+              distributionIds:
+                type: array
+                description: |
+                  The distributions this artifact describes. Absent or empty
+                  means it applies to all of them, which is what the
+                  consumption specification says of the same field.
+
+                  It matters for exactly the case where an SBOM is not one
+                  document: a Windows installer and a source tarball of the
+                  same release have different contents, and an artifact that
+                  cannot say which one it describes is attached to both
+                  incorrectly.
+                items:
+                  $ref: "#/components/schemas/uuid"
               accessPolicy:
                 $ref: "#/components/schemas/access-policy"
             required:
@@ -2895,11 +3406,19 @@ components:
                 type: string
               type:
                 $ref: "#/components/schemas/artifact-type"
+              distributionIds:
+                type: array
+                description: |
+                  Replaces the set of distributions this artifact describes.
+                  An empty array means all of them.
+                items:
+                  $ref: "#/components/schemas/uuid"
               accessPolicy:
                 $ref: "#/components/schemas/access-policy"
 security:
   - bearerAuth: []
   - basicAuth: []
+  - {}
 tags:
   - name: TEA Product
   - name: TEA Product Release
@@ -2916,6 +3435,11 @@ tags:
     description: |
       Operations controlling who may read an object through the consumption
       API: the publishing organisation alone, named counterparties, or anyone.
+  - name: TEA Publication Target
+    description: |
+      Registration of the remote TEA servers a publisher mirrors objects to.
+      Mirroring is a copy the receiving server then governs, so the set of
+      targets is configured deliberately rather than named in passing.
 externalDocs:
   description: Transparency Exchange API specification
   url: https://github.com/CycloneDX/transparency-exchange-api

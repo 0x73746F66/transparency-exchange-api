@@ -59,6 +59,15 @@ owns. That is the drift check with teeth: the overlay may only add.
   field OpenAPI defines, so the three `$ref`s pointing into it never resolved
   and every delete declared no responses at all. A generator reading the old
   draft produced deletes that returned nothing.
+- **A product release can state its components.** The consumption API lists
+  `components` among `productRelease`'s required members, and the draft's
+  create body had no way to set it — so every release a conformant publisher
+  could produce had to be served with an empty list, which is a claim about the
+  product rather than a gap in the record.
+- **An artifact can say which distributions it describes.** `distributionIds`
+  exists in the consumption `artifact` and was unreachable from the publication
+  API. It matters where an SBOM is not one document: a Windows installer and a
+  source tarball of the same release have different contents.
 
 ## What the publication overlay adds
 
@@ -109,8 +118,10 @@ servers. Two rules carry the weight:
   guarantee nothing, because any artifact beneath it could quietly be made
   public.
 - **`public` is one-way in practice.** No later request recalls what has already
-  been fetched, so a server should require a separate confirmation for that
-  transition rather than treating it as an ordinary field update.
+  been fetched, so that transition requires `confirm=public` rather than being
+  an ordinary field update. The mechanism is named, not merely asked for: an
+  unspecified requirement is one every publisher satisfies differently, which
+  is the failure this document exists to avoid.
 
 This needs no new consumer-side behaviour: a consumer denied by the policy gets
 the consumption specification's existing `OBJECT_NOT_SHAREABLE`, which is
@@ -120,6 +131,28 @@ already in `unknown-error-type`.
 *effectively* has and which ancestor that came from. The gap between declared
 and effective is where accidental disclosure hides, so it is reported rather
 than left to be reconstructed.
+
+Mirroring to other TEA servers is `publishTo`, naming targets registered
+through `/publicationTargets`. Registration is separate from use because a
+credential is involved, and because handing an object to another server is a
+decision that outlives the object — once a copy lands there, this server's
+policy no longer governs it. Mirroring is asynchronous and never blocks the
+local write: refusing to record a publisher's own release because a mirror is
+unreachable would make every target a single point of failure for publication
+itself. State is reported per target on the object's access policy, and a
+server that does not mirror answers `MIRRORING_UNSUPPORTED` rather than
+accepting the request and doing nothing.
+
+### The publisher read surface
+
+`GET /publications` and `GET /publications/{uuid}/releases` report what this
+organisation has published together with the policy in force for each.
+
+The consumption API cannot answer this. It answers what a *reader* is entitled
+to see, and the thing a publisher most needs to verify — that something private
+really is private — is exactly what a consumption response cannot show, because
+an object correctly withheld and an object that was never created look
+identical from outside.
 
 ### Idempotency
 
@@ -141,13 +174,33 @@ These are worth fixing in the consumption specification rather than papering
 over here, since patching them in this fork would put it at odds with upstream
 on a file upstream owns.
 
+## The one change this makes to the consumption specification
+
+`spec/openapi.yaml` gains an empty alternative in its global `security`, so
+authentication is optional rather than mandatory.
+
+Without it the publication API cannot mean what it says. `visibility: public`
+is defined as "readable without authentication", and the discovery sequence a
+consumer follows — take the domain out of a TEI, fetch that host's discovery
+document, call the root it names — has no step at which a credential could be
+obtained. A specification that requires one on every operation closes the only
+entry point it defines, and any server that actually serves a public object
+anonymously is then non-conformant for doing the right thing.
+
+It is a widening, so no conformant client or server is broken by it: a server
+may still refuse every anonymous request, and one that answers is now allowed
+to. The publication operations are unaffected — `build.mjs` gives every
+operation the overlay contributes an explicit `bearerAuth`/`basicAuth`
+requirement, so anonymous writes are never conformant.
+
 ## Open questions
 
-- **No publisher-side read surface.** A publisher reconciling state has to go
-  through the consumption API, which by design will not show it anything
-  private — so there is currently no way to list what you have published.
-- **`publishTo` does not define failure semantics.** Whether a failed mirror
-  should block the local publication is unspecified.
 - **Artifact versions.** The consumption API addresses artifacts as
   `/artifact/{uuid}/{artifactVersion}`, but the overlay's create and update do
-  not yet say how a publisher advances that version.
+  not yet say how a publisher advances that version. The rule is probably that
+  content is immutable and a new revision is a new version, but "probably" is
+  not a specification.
+- **Mirror authentication is one-directional.** A target is registered with a
+  credential this server presents. Nothing says how the receiving server
+  decides whether to accept a mirrored object, or how it records that the
+  object came from elsewhere rather than being published to it directly.

@@ -43,9 +43,34 @@ const overlay = yaml.load(readFileSync(overlayPath, 'utf8'))
  */
 const collisions = []
 
+// The consumption document's global `security` now offers an anonymous
+// alternative, because every operation in it is a read and discovery has no
+// step at which a credential could be obtained.
+//
+// That must not reach the publication operations. Inheriting the global list
+// would make anonymous writes conformant, which is the opposite of what the
+// access policy exists to say — so every operation the overlay contributes
+// declares its own requirement here. Stated once, rather than repeated on
+// twenty operations where one omission would be a silent hole.
+const WRITE_SECURITY = [{ bearerAuth: [] }, { basicAuth: [] }]
+
+// A path item also holds `parameters`, `summary` and `$ref`, none of which take
+// a security requirement.
+const HTTP_METHODS = new Set(['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace'])
+
+function requireCredential(method, op) {
+    // An overlay operation may still set `security` itself; this only supplies
+    // the default.
+    if (HTTP_METHODS.has(method)) op.security ??= WRITE_SECURITY
+    return op
+}
+
 function mergeSection(target, source, path) {
     for (const [key, value] of Object.entries(source ?? {})) {
         if (target[key] === undefined) {
+            if (path === 'paths') {
+                for (const [method, op] of Object.entries(value)) requireCredential(method, op)
+            }
             target[key] = value
             continue
         }
@@ -59,7 +84,7 @@ function mergeSection(target, source, path) {
                     collisions.push(`${path}.${key}.${method}`)
                     continue
                 }
-                target[key][method] = op
+                target[key][method] = requireCredential(method, op)
             }
             continue
         }
