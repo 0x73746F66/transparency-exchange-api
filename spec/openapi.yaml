@@ -1761,7 +1761,7 @@ security:
   # TEI, fetches that host's discovery document, and calls the root it names.
   # Requiring a credential of all three would close the only entry point the
   # specification defines, so a server MUST be able to answer an anonymous
-  # request. What it answers with is a separate question — an object the caller
+  # request. What it answers with is a separate question: an object the caller
   # is not entitled to is `OBJECT_UNKNOWN`, exactly as it is for an object that
   # does not exist.
   #

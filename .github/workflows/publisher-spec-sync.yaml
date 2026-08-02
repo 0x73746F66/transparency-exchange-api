@@ -52,7 +52,7 @@ jobs:
                   # nothing the count does not. Discard it: this step runs under
                   # `bash -e`, and without the `|| true` the pipeline's inherited
                   # failure aborts the assignment below before anything is
-                  # compared. That is not a hypothetical — it is why this step
+                  # compared. That is not a hypothetical: it is why this step
                   # failed on every run before this comment existed.
                   count() {
                     { npx redocly lint "$1" --format=json 2>/dev/null || true; } | node -e '

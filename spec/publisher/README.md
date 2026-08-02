@@ -18,7 +18,7 @@ npm run lint      # redocly
 
 It used to be a hand-maintained copy, and it drifted, as copies do. While the
 consumption API moved to 0.4.0 the copy still carried schemas from 0.0.3, under
-different names — `artifactFormat` beside the real `artifact-format`, `typeUuid`
+different names: `artifactFormat` beside the real `artifact-format`, `typeUuid`
 beside `uuid`, a private `artifactChecksum` beside `checksum`. A combined
 document then holds two definitions of the same concept, each free to move
 independently, with nothing to say which one a publisher should believe.
@@ -41,18 +41,18 @@ owns. That is the drift check with teeth: the overlay may only add.
   `release` in the consumption schemas.
 - **Collections are addressed through their release.** The consumption
   specification states that a collection's UUID matches the release it belongs
-  to, and that an update only changes the version — so a collection is not an
+  to, and that an update only changes the version, so a collection is not an
   independently created object. Publishing one is now
   `PUT /productRelease/{uuid}/collection` (and the component equivalent), which
   publishes the next version, rather than `POST /collection`.
 - **Errors reuse the consumption envelope.** The draft returned
-  `application/json: {}` — an empty schema saying nothing about failures.
+  `application/json: {}`, an empty schema saying nothing about failures.
   `publisher-error-response` uses the same `{ error: <enum> }` shape as
   `error-response`, over an enumeration that repeats the consumption values
   (`OBJECT_UNKNOWN`, `OBJECT_NOT_SHAREABLE`) and adds the ones only a writer can
   hit, so a client branches on one enumeration rather than two.
 - **`distribution` was renamed `access-policy`.** The consumption specification
-  already uses `release-distribution` for something else entirely — a
+  already uses `release-distribution` for something else entirely: a
   downloadable build with its own URL and checksums. Reusing the word for access
   control in a combined document would have been actively misleading.
 - **The invalid delete indirection is gone.** `components.operations` is not a
@@ -61,7 +61,7 @@ owns. That is the drift check with teeth: the overlay may only add.
   draft produced deletes that returned nothing.
 - **A product release can state its components.** The consumption API lists
   `components` among `productRelease`'s required members, and the draft's
-  create body had no way to set it — so every release a conformant publisher
+  create body had no way to set it, so every release a conformant publisher
   could produce had to be served with an empty list, which is a claim about the
   product rather than a gap in the record.
 - **An artifact can say which distributions it describes.** `distributionIds`
@@ -83,7 +83,7 @@ correct one metadata field will in practice not correct the field. Content is
 `PUT` per format in its own media type rather than base64 inside JSON, which
 would inflate it by a third for no benefit.
 
-Stored bytes are immutable — a checksum a consumer already recorded must not
+Stored bytes are immutable: a checksum a consumer already recorded must not
 begin describing different content, so replacing content means a new format or a
 new artifact. Uploads accept `Content-Digest` (RFC 9530) and a mismatch is
 rejected, which is what makes a retry safe: a truncated transfer fails loudly
@@ -96,7 +96,7 @@ indicator of the certificate used, and the intermediate and signing
 certificates. The consumption API exposes only a `signatureUrl`, so a consumer
 must infer the scheme from the bytes before it can verify anything.
 `artifact-signature` records the scheme, algorithm, key identifier, certificate
-and chain, and the transparency-log entry where the scheme has one — which is
+and chain, and the transparency-log entry where the scheme has one. That is
 what turns a signature from something that exists into something checkable.
 
 ### Access policy
@@ -107,8 +107,8 @@ publication API, where the same server holds material that is deliberately
 public, material shared with named counterparties under agreement, and material
 that is purely internal. Absent an answer, every publisher invents one.
 
-Three visibilities — `private`, `shared` (to named organisation UUIDs, with
-optional expiry) and `public` — plus `publishTo` for mirroring to other TEA
+Three visibilities (`private`, `shared` to named organisation UUIDs with an
+optional expiry, and `public`), plus `publishTo` for mirroring to other TEA
 servers. Two rules carry the weight:
 
 - **The narrowest declaration on the chain wins, not the nearest.** An artifact
@@ -143,7 +143,7 @@ than left to be reconstructed.
 Mirroring to other TEA servers is `publishTo`, naming targets registered
 through `/publicationTargets`. Registration is separate from use because a
 credential is involved, and because handing an object to another server is a
-decision that outlives the object — once a copy lands there, this server's
+decision that outlives the object: once a copy lands there, this server's
 policy no longer governs it. Mirroring is asynchronous and never blocks the
 local write: refusing to record a publisher's own release because a mirror is
 unreachable would make every target a single point of failure for publication
@@ -157,8 +157,8 @@ accepting the request and doing nothing.
 organisation has published together with the policy in force for each.
 
 The consumption API cannot answer this. It answers what a *reader* is entitled
-to see, and the thing a publisher most needs to verify — that something private
-really is private — is exactly what a consumption response cannot show, because
+to see, and the thing a publisher most needs to verify, that something private
+really is private, is exactly what a consumption response cannot show, because
 an object correctly withheld and an object that was never created look
 identical from outside.
 
@@ -166,7 +166,7 @@ identical from outside.
 
 `Idempotency-Key` on creates. Publication runs in pipelines, and pipelines
 retry. Without it a timeout that actually succeeded yields a second object on
-the next attempt — a duplicate found by a consumer rather than by the publisher.
+the next attempt, a duplicate found by a consumer rather than by the publisher.
 
 ## Known lint baseline
 
@@ -174,8 +174,8 @@ the next attempt — a duplicate found by a consumer rather than by the publishe
 `spec/openapi.yaml` on its own reports exactly the same 24, so the publication
 overlay contributes none.
 
-- 23 × `operation-summary` — consumption operations have no `summary`.
-- 1 × `struct` — `pagination-details.nextPageToken` uses `nullable: false`,
+- 23 × `operation-summary`: consumption operations have no `summary`.
+- 1 × `struct`: `pagination-details.nextPageToken` uses `nullable: false`,
   which OpenAPI 3.1 removed in favour of a type union.
 
 These are worth fixing in the consumption specification rather than papering
@@ -189,15 +189,15 @@ authentication is optional rather than mandatory.
 
 Without it the publication API cannot mean what it says. `visibility: public`
 is defined as "readable without authentication", and the discovery sequence a
-consumer follows — take the domain out of a TEI, fetch that host's discovery
-document, call the root it names — has no step at which a credential could be
+consumer follows (take the domain out of a TEI, fetch that host's discovery
+document, call the root it names) has no step at which a credential could be
 obtained. A specification that requires one on every operation closes the only
 entry point it defines, and any server that actually serves a public object
 anonymously is then non-conformant for doing the right thing.
 
 It is a widening, so no conformant client or server is broken by it: a server
 may still refuse every anonymous request, and one that answers is now allowed
-to. The publication operations are unaffected — `build.mjs` gives every
+to. The publication operations are unaffected: `build.mjs` gives every
 operation the overlay contributes an explicit `bearerAuth`/`basicAuth`
 requirement, so anonymous writes are never conformant.
 

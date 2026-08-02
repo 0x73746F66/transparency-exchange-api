@@ -15,8 +15,9 @@ info:
     TBC
 
     This document is the consumption specification plus the publication
-    operations. Everything the two share — products, components, releases,
-    collections, artifacts, checksums, identifiers — has a single definition,
+    operations. Everything the two share, whether products, components,
+    releases, collections, artifacts, checksums or identifiers, has a single
+    definition,
     taken from the consumption specification, so a publisher and a consumer
     cannot hold different ideas of the same object.
 
@@ -934,7 +935,8 @@ paths:
         channel a user installs from.
 
         Idempotent on the `url`, or on the `description` where a channel has no
-        single file to fetch — `brew install`, `scoop install`, `nix run`. A
+        single file to fetch, such as `brew install`, `scoop install` or
+        `nix run`. A
         pipeline that retries therefore updates the link rather than leaving a
         consumer to choose between two identical ones.
 
@@ -944,7 +946,7 @@ paths:
 
         Checksums are recorded verbatim. This server does not hold the bytes a
         distribution points at, so it cannot verify them and does not claim to
-        have — which is why a publisher should copy the digests from the same
+        have, which is why a publisher should copy the digests from the same
         manifest its users verify against rather than recomputing them.
       parameters:
         - $ref: "#/components/parameters/object-uuid"
@@ -1208,9 +1210,9 @@ paths:
       description: |
         Register a remote TEA server this organisation may mirror to.
 
-        A server SHOULD verify the target before accepting it — that the root
-        answers, advertises a compatible version, and accepts the credential —
-        so that a target which was never going to work fails here, in front of
+        A server SHOULD verify the target before accepting it, confirming that
+        the root answers, advertises a compatible version and accepts the
+        credential, so that a target which was never going to work fails here, in front of
         whoever configured it, rather than later inside an asynchronous mirror
         nobody is watching.
       parameters:
@@ -1388,7 +1390,7 @@ paths:
         A change to `public` MUST carry `confirm=public`, because no later
         request undoes it: whatever was fetched while it was public stays
         fetched. Naming the mechanism rather than only asking for "a
-        confirmation" is deliberate — an unspecified requirement is one every
+        confirmation" is deliberate: an unspecified requirement is one every
         publisher satisfies differently, which is the failure this document
         exists to avoid.
       parameters:
@@ -2426,7 +2428,7 @@ components:
         `error-response`, over the wider publication enumeration, with an
         optional human-readable message and a pointer to the offending field.
 
-        Publication is automated — a release pipeline is usually the caller —
+        Publication is automated, and a release pipeline is usually the caller,
         so a failure has to be actionable without a human reading prose.
       additionalProperties: false
       properties:
@@ -2485,13 +2487,13 @@ components:
         visibility:
           type: string
           description: |
-            `private` — only the publishing organisation may read it.
+            `private`: only the publishing organisation may read it.
 
-            `shared` — readable by the publishing organisation and the
+            `shared`: readable by the publishing organisation and the
             organisations named in `sharedWith`. Authentication is required and
             the reader's identity decides the answer.
 
-            `public` — readable without authentication. The only value that
+            `public`: readable without authentication. The only value that
             makes an object part of the open transparency web, and irreversible
             in practice: what has been fetched cannot be recalled.
           enum:
@@ -2568,8 +2570,8 @@ components:
           type: string
           format: uri
           description: |
-            The remote server's TEA root, without a trailing slash — the same
-            value that server advertises as `rootUrl` in its own discovery
+            The remote server's TEA root, without a trailing slash. This is the
+            same value that server advertises as `rootUrl` in its own discovery
             document.
         domain:
           type: string
@@ -2614,8 +2616,8 @@ components:
           description: |
             State of the most recent attempt.
 
-            `pending` — accepted locally, not yet copied. `published` — the
-            target acknowledged it. `failed` — the last attempt did not
+            `pending` means accepted locally and not yet copied. `published`
+            means the target acknowledged it. `failed` means the last attempt did not
             succeed and `detail` says why; the server SHOULD retry, and MUST
             NOT silently give up without leaving this state visible.
           enum:
@@ -2638,7 +2640,7 @@ components:
         signatures/signature.md calls for an indication of the hash algorithm,
         an indicator of the certificate used, and the intermediate and signing
         certificates. This carries them, plus the transparency-log entry where
-        the scheme has one — a signature that is itself publicly logged is far
+        the scheme has one. A signature that is itself publicly logged is far
         harder to backdate.
       additionalProperties: false
       properties:
@@ -2756,7 +2758,7 @@ components:
           minimum: 0
           description: |
             Version of this release's current collection, or 0 where no
-            collection has been published yet — a release a consumer can
+            collection has been published yet, a release a consumer can
             resolve and find nothing in.
         artifactCount:
           type: integer
@@ -3111,7 +3113,7 @@ components:
       description: |
         Zero-based index of the format within the artifact's `formats` array.
         Formats are addressed positionally because a media type is not unique
-        within an artifact — the same document is often published both
+        within an artifact: the same document is often published both
         compressed and not.
       schema:
         type: integer
@@ -3140,7 +3142,7 @@ components:
 
         Publication runs in release pipelines, and pipelines retry. Without
         this, a timeout that actually succeeded produces a second object on the
-        next attempt — a duplicate discovered by a consumer rather than by the
+        next attempt, a duplicate discovered by a consumer rather than by the
         publisher. A server supporting the key MUST return the original result
         for a repeat of the same key rather than creating again.
       schema:
@@ -3180,7 +3182,8 @@ components:
                 type: array
                 description: |
                   Identifiers for the product. A server assigns the TEI itself
-                  — it names the server's own authority over the object, so a
+                  because it names the server's own authority over the object,
+                  so a
                   publisher supplying one would be asserting something only the
                   server can know.
                 items:
@@ -3286,7 +3289,7 @@ components:
                 format: uri
                 description: |
                   The remote server's TEA root, without a trailing slash. Must
-                  be an absolute https URL — a mirror carries a credential, and
+                  be an absolute https URL, because a mirror carries a credential and
                   sending one over http would publish it to the network as well
                   as to the target.
               description:
@@ -3350,8 +3353,8 @@ components:
                 type: array
                 description: |
                   Identifiers for this distribution specifically. Optional
-                  because several real channels have no accepted purl type —
-                  Homebrew and Scoop among them — and an identifier that names
+                  because several real channels have no accepted purl type,
+                  Homebrew and Scoop among them, and an identifier that names
                   a coordinate which does not resolve is worse than none, since
                   a consumer will follow it.
                 items:
@@ -3423,7 +3426,7 @@ components:
             type: object
             additionalProperties: false
             description: |
-              Metadata only. Stored bytes are immutable — replacing content
+              Metadata only. Stored bytes are immutable: replacing content
               means a new format or a new artifact, not an overwrite.
             properties:
               name:

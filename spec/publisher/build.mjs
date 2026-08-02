@@ -4,7 +4,7 @@
 //
 // The publisher document used to be a hand-maintained copy of the consumption
 // spec. It drifted, as copies do: while the consumption API reached 0.4.0 the
-// copy was still carrying schemas from 0.0.3, under different names —
+// copy was still carrying schemas from 0.0.3, under different names:
 // `artifactFormat` beside the real `artifact-format`, `typeUuid` beside `uuid`,
 // a private `artifactChecksum` beside `checksum`. A combined document then has
 // two definitions of the same concept, each free to move independently, and
@@ -38,8 +38,8 @@ const overlay = yaml.load(readFileSync(overlayPath, 'utf8'))
  *
  * Deliberately shallow-but-structured rather than a generic deep merge: the
  * overlay may only ADD. If it defines a key the consumption spec already
- * defines, that is drift reappearing — the publisher redefining something the
- * consumer owns — so it is a build failure rather than a silent overwrite.
+ * defines, that is drift reappearing, the publisher redefining something the
+ * consumer owns, so it is a build failure rather than a silent overwrite.
  */
 const collisions = []
 
@@ -49,7 +49,7 @@ const collisions = []
 //
 // That must not reach the publication operations. Inheriting the global list
 // would make anonymous writes conformant, which is the opposite of what the
-// access policy exists to say — so every operation the overlay contributes
+// access policy exists to say, so every operation the overlay contributes
 // declares its own requirement here. Stated once, rather than repeated on
 // twenty operations where one omission would be a silent hole.
 const WRITE_SECURITY = [{ bearerAuth: [] }, { basicAuth: [] }]
@@ -103,8 +103,9 @@ consumer.info = {
         consumer.info.description?.trim(),
         '',
         'This document is the consumption specification plus the publication',
-        'operations. Everything the two share — products, components, releases,',
-        'collections, artifacts, checksums, identifiers — has a single definition,',
+        'operations. Everything the two share, whether products, components,',
+        'releases, collections, artifacts, checksums or identifiers, has a single',
+        'definition,',
         'taken from the consumption specification, so a publisher and a consumer',
         'cannot hold different ideas of the same object.',
         '',
