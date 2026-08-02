@@ -13,11 +13,23 @@ info:
     url: https://github.com/CycloneDX/transparency-exchange-api/blob/main/LICENSE
   version: 0.1.0-beta.1
 servers:
-  - url: http://localhost/tea/v1
-    description: Local development
+  - url: https://{host}/tea/v{version}
+    description: |
+      A TEA server. `host` is the name a consumer reaches after resolving the
+      domain component of a TEI and reading `/.well-known/tea`; `version` is one
+      of the versions that document advertises for the chosen endpoint, so the
+      publication and consumption APIs are addressed identically.
+    variables:
+      host:
+        default: localhost
+        description: Host serving the API.
+      version:
+        default: '1'
+        description: TEA API version, without a leading `v`.
 paths:
   /product/{uuid}:
     patch:
+      summary: Update a TEA Product
       description: Update an existing TEA Product entry
       operationId: updateTeaProduct
       parameters:
@@ -42,6 +54,7 @@ paths:
       tags:
         - TEA Product
     delete:
+      summary: Delete a TEA Product
       description: Delete a TEA Product entry
       operationId: deleteTeaProduct
       parameters:
@@ -52,11 +65,18 @@ paths:
           schema:
             type: string
             format: uuid
-      $ref: '#/components/operations/standardDelete'
+      responses:
+        '204':
+          $ref: '#/components/responses/204-object-deleted'
+        '401':
+          $ref: '#/components/responses/401-unauthorized'
+        '404':
+          $ref: '#/components/responses/404-object-by-id-not-found'
       tags:
         - TEA Product
   /product:
     post:
+      summary: Create a TEA Product
       description: Create TEA Product entry for the supplied product identifier
       operationId: createTeaProduct
       requestBody:
@@ -74,6 +94,7 @@ paths:
         - TEA Product
   /component:
     post:
+      summary: Create a TEA Component
       description: Create a new TEA Component entry
       operationId: createTeaComponent
       requestBody:
@@ -91,6 +112,7 @@ paths:
         - TEA Component
   /component/{uuid}:
     patch:
+      summary: Update a TEA Component
       description: Update an existing TEA Component entry
       operationId: updateTeaComponent
       parameters:
@@ -115,6 +137,7 @@ paths:
       tags:
         - TEA Component
     delete:
+      summary: Delete a TEA Component
       description: Delete a TEA Component entry
       operationId: deleteTeaComponent
       parameters:
@@ -125,11 +148,18 @@ paths:
           schema:
             type: string
             format: uuid
-      $ref: '#/components/operations/standardDelete'
+      responses:
+        '204':
+          $ref: '#/components/responses/204-object-deleted'
+        '401':
+          $ref: '#/components/responses/401-unauthorized'
+        '404':
+          $ref: '#/components/responses/404-object-by-id-not-found'
       tags:
         - TEA Component
   /release:
     post:
+      summary: Create a TEA Release
       description: Create a new TEA Release
       operationId: createTeaRelease
       requestBody:
@@ -147,6 +177,7 @@ paths:
         - TEA Release
   /release/{uuid}:
     patch:
+      summary: Update a TEA Release
       description: Update an existing TEA Release entry
       operationId: updateTeaRelease
       parameters:
@@ -171,6 +202,7 @@ paths:
       tags:
         - TEA Release
     delete:
+      summary: Delete a TEA Release
       description: Delete a TEA Release entry
       operationId: deleteTeaRelease
       parameters:
@@ -181,13 +213,22 @@ paths:
           schema:
             type: string
             format: uuid
-      $ref: '#/components/operations/standardDelete'
+      responses:
+        '204':
+          $ref: '#/components/responses/204-object-deleted'
+        '401':
+          $ref: '#/components/responses/401-unauthorized'
+        '404':
+          $ref: '#/components/responses/404-object-by-id-not-found'
       tags:
         - TEA Release
   /collection:
     post:
+      summary: Create a TEA Collection
       description: Create a new TEA Collection
       operationId: createTeaCollection
+      parameters:
+        - $ref: '#/components/parameters/idempotencyKey'
       requestBody:
         $ref: '#/components/requestBodies/CreateTeaCollection'
       responses:
@@ -199,10 +240,472 @@ paths:
           $ref: '#/components/responses/401-unauthorized'
         '404':
           $ref: '#/components/responses/404-object-by-id-not-found'
+        '409':
+          $ref: '#/components/responses/409-conflict'
       tags:
         - TEA Collection
+  /collection/{uuid}:
+    patch:
+      summary: Update a TEA Collection
+      description: |
+        Update a collection.
+
+        A collection is the unit TEA versions, and its `updateReason` is how a
+        consumer distinguishes a correction from a re-issue. A server MUST
+        require an update reason on any change that alters the artifacts a
+        collection publishes, because a collection that changes without saying
+        why is indistinguishable from one that was tampered with.
+      operationId: updateTeaCollection
+      parameters:
+        - $ref: '#/components/parameters/objectUuid'
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateTeaCollection'
+      responses:
+        '200':
+          $ref: '#/components/responses/200-tea-collection-updated'
+        '400':
+          $ref: '#/components/responses/400-invalid-request-body'
+        '401':
+          $ref: '#/components/responses/401-unauthorized'
+        '404':
+          $ref: '#/components/responses/404-object-by-id-not-found'
+        '409':
+          $ref: '#/components/responses/409-conflict'
+      tags:
+        - TEA Collection
+    delete:
+      summary: Delete a TEA Collection
+      description: Delete a collection and the artifact entries it holds.
+      operationId: deleteTeaCollection
+      parameters:
+        - $ref: '#/components/parameters/objectUuid'
+      responses:
+        '204':
+          $ref: '#/components/responses/204-object-deleted'
+        '401':
+          $ref: '#/components/responses/401-unauthorized'
+        '404':
+          $ref: '#/components/responses/404-object-by-id-not-found'
+      tags:
+        - TEA Collection
+
+  /artifact:
+    post:
+      summary: Create a TEA Artifact
+      description: |
+        Create an artifact entry within a collection.
+
+        This registers the artifact and its formats; it does not carry the
+        bytes. Content is uploaded per format through
+        `/artifact/{uuid}/format/{formatIndex}/content`, or referenced by URL
+        when the publisher hosts it elsewhere. Separating the two matters
+        because an SBOM is routinely tens of megabytes, and a publisher that
+        must resend all of it to correct one field will eventually not correct
+        the field.
+      operationId: createTeaArtifact
+      parameters:
+        - $ref: '#/components/parameters/idempotencyKey'
+      requestBody:
+        $ref: '#/components/requestBodies/CreateTeaArtifact'
+      responses:
+        '201':
+          $ref: '#/components/responses/201-tea-artifact-created'
+        '400':
+          $ref: '#/components/responses/400-invalid-request-body'
+        '401':
+          $ref: '#/components/responses/401-unauthorized'
+        '404':
+          $ref: '#/components/responses/404-object-by-id-not-found'
+        '409':
+          $ref: '#/components/responses/409-conflict'
+      tags:
+        - TEA Artifact
+  /artifact/{uuid}:
+    patch:
+      summary: Update a TEA Artifact
+      description: |
+        Update an artifact's metadata.
+
+        Stored bytes are immutable: a checksum a consumer has already recorded
+        must not start describing different content. Replacing content means
+        adding a new format or a new artifact version, never rewriting one in
+        place.
+      operationId: updateTeaArtifact
+      parameters:
+        - $ref: '#/components/parameters/objectUuid'
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateTeaArtifact'
+      responses:
+        '200':
+          $ref: '#/components/responses/200-tea-artifact-updated'
+        '400':
+          $ref: '#/components/responses/400-invalid-request-body'
+        '401':
+          $ref: '#/components/responses/401-unauthorized'
+        '404':
+          $ref: '#/components/responses/404-object-by-id-not-found'
+        '409':
+          $ref: '#/components/responses/409-conflict'
+      tags:
+        - TEA Artifact
+    delete:
+      summary: Delete a TEA Artifact
+      description: Delete an artifact entry and any content this server holds for it.
+      operationId: deleteTeaArtifact
+      parameters:
+        - $ref: '#/components/parameters/objectUuid'
+      responses:
+        '204':
+          $ref: '#/components/responses/204-object-deleted'
+        '401':
+          $ref: '#/components/responses/401-unauthorized'
+        '404':
+          $ref: '#/components/responses/404-object-by-id-not-found'
+      tags:
+        - TEA Artifact
+  /artifact/{uuid}/format/{formatIndex}/content:
+    put:
+      summary: Upload artifact content
+      description: |
+        Upload the bytes of one artifact format.
+
+        The body is the artifact itself, sent with its own media type rather
+        than wrapped in JSON or base64 — an SBOM is already a document, and
+        re-encoding it inflates it by a third for no benefit.
+
+        A client SHOULD send `Content-Digest`. Where it does, the server MUST
+        verify the digest against the received bytes and reject a mismatch with
+        `CHECKSUM_MISMATCH`. This is what makes an upload safe to retry: a
+        truncated transfer fails loudly instead of publishing a corrupt artifact
+        under a checksum that says otherwise.
+      operationId: uploadTeaArtifactContent
+      parameters:
+        - $ref: '#/components/parameters/objectUuid'
+        - $ref: '#/components/parameters/formatIndex'
+        - $ref: '#/components/parameters/contentDigest'
+      requestBody:
+        required: true
+        description: The artifact bytes, in the media type declared by the format.
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+          application/vnd.cyclonedx+json:
+            schema:
+              type: string
+              format: binary
+          application/spdx+json:
+            schema:
+              type: string
+              format: binary
+          application/sarif+json:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          $ref: '#/components/responses/200-tea-artifact-updated'
+        '400':
+          $ref: '#/components/responses/400-invalid-request-body'
+        '401':
+          $ref: '#/components/responses/401-unauthorized'
+        '404':
+          $ref: '#/components/responses/404-object-by-id-not-found'
+        '413':
+          $ref: '#/components/responses/413-payload-too-large'
+        '415':
+          $ref: '#/components/responses/415-unsupported-media-type'
+      tags:
+        - TEA Artifact
+  /artifact/{uuid}/format/{formatIndex}/signature:
+    put:
+      summary: Attach a detached signature
+      description: |
+        Attach a detached signature to one artifact format, declaring the scheme
+        it was produced with.
+
+        The consumption API exposes a `signatureUrl` and nothing else, so a
+        consumer is left to infer the scheme from the bytes. Recording it here
+        is what turns a signature from something that exists into something that
+        can be checked.
+      operationId: uploadTeaArtifactSignature
+      parameters:
+        - $ref: '#/components/parameters/objectUuid'
+        - $ref: '#/components/parameters/formatIndex'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/artifactSignature'
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+              description: |
+                The raw detached signature. The scheme MUST then be supplied in
+                the `X-TEA-Signature-Type` header, since bytes alone do not say
+                how to verify them.
+      responses:
+        '200':
+          $ref: '#/components/responses/200-tea-artifact-updated'
+        '400':
+          $ref: '#/components/responses/400-invalid-request-body'
+        '401':
+          $ref: '#/components/responses/401-unauthorized'
+        '404':
+          $ref: '#/components/responses/404-object-by-id-not-found'
+        '415':
+          $ref: '#/components/responses/415-unsupported-media-type'
+      tags:
+        - TEA Artifact
+
+  /distribution/{uuid}:
+    get:
+      summary: Read effective distribution
+      description: |
+        The distribution actually in force for an object, after inheritance.
+
+        A publisher needs to be able to answer "who can see this?" without
+        replaying the object tree in their head. The response reports both what
+        the object declares and what it inherits, because the difference between
+        the two is exactly where accidental disclosure hides.
+      operationId: getTeaDistribution
+      parameters:
+        - $ref: '#/components/parameters/objectUuid'
+      responses:
+        '200':
+          $ref: '#/components/responses/200-tea-distribution'
+        '401':
+          $ref: '#/components/responses/401-unauthorized'
+        '404':
+          $ref: '#/components/responses/404-object-by-id-not-found'
+      tags:
+        - TEA Distribution
+    put:
+      summary: Set distribution
+      description: |
+        Set an object's own distribution, replacing any it previously declared.
+
+        A server MUST reject a distribution that is wider than the effective
+        distribution of the object's parent, with `DISTRIBUTION_WIDENS_PARENT`.
+        A server SHOULD require a distinct confirmation for a change to
+        `public`, because that transition cannot be undone by any later request:
+        whatever was fetched while it was public stays fetched.
+      operationId: setTeaDistribution
+      parameters:
+        - $ref: '#/components/parameters/objectUuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/distribution'
+      responses:
+        '200':
+          $ref: '#/components/responses/200-tea-distribution'
+        '400':
+          $ref: '#/components/responses/400-invalid-request-body'
+        '401':
+          $ref: '#/components/responses/401-unauthorized'
+        '403':
+          $ref: '#/components/responses/403-forbidden'
+        '404':
+          $ref: '#/components/responses/404-object-by-id-not-found'
+        '409':
+          $ref: '#/components/responses/409-conflict'
+      tags:
+        - TEA Distribution
 components:
   schemas:
+    error:
+      type: object
+      description: |
+        A machine-readable error. Publication is an automated activity — a
+        release pipeline is usually the caller — so a failure has to be
+        actionable without a human reading prose.
+      properties:
+        code:
+          type: string
+          description: Stable, machine-readable reason. Clients branch on this, never on `message`.
+          enum:
+            - INVALID_REQUEST
+            - UNAUTHORIZED
+            - FORBIDDEN
+            - OBJECT_NOT_FOUND
+            - DUPLICATE_OBJECT
+            - VERSION_CONFLICT
+            - DISTRIBUTION_WIDENS_PARENT
+            - UNSUPPORTED_MEDIA_TYPE
+            - PAYLOAD_TOO_LARGE
+            - CHECKSUM_MISMATCH
+            - SIGNATURE_INVALID
+        message:
+          type: string
+          description: Human-readable explanation. Not a stable interface.
+        field:
+          type: string
+          description: JSON Pointer to the offending member of the request body, where one applies.
+      required:
+        - code
+        - message
+
+    distribution:
+      type: object
+      description: |
+        Who may read an object through the consumption API.
+
+        TEA describes how transparency data is *fetched*, not who is entitled to
+        fetch it, which leaves every publisher to invent an answer. A publisher
+        API cannot avoid the question: the same server holds material that is
+        deliberately public, material shared with named counterparties under an
+        agreement, and material that is purely internal.
+
+        Distribution is resolved by inheritance. An object with no distribution
+        of its own takes its parent's — artifact from collection, collection
+        from release, release from product. An object MAY narrow what it
+        inherits and MUST NOT widen it: a server MUST reject with
+        `DISTRIBUTION_WIDENS_PARENT` any request that would make a child more
+        visible than its parent. Without that rule, publishing a product
+        privately would be no guarantee at all, because any artifact beneath it
+        could quietly be made public.
+      properties:
+        visibility:
+          type: string
+          description: |
+            `private` — only the publishing organisation may read it.
+
+            `shared` — readable by the publishing organisation and by the
+            organisations named in `sharedWith`. Authentication is required and
+            the reader's identity decides the answer.
+
+            `public` — readable without authentication. This is the only value
+            that makes an object part of the open transparency web, and it is
+            irreversible in practice: what has been fetched cannot be recalled.
+          enum:
+            - private
+            - shared
+            - public
+          default: private
+        sharedWith:
+          type: array
+          description: |
+            Organisations entitled to read this object when `visibility` is
+            `shared`. Identified by the consuming organisation's UUID on this
+            server. MUST be empty for any other visibility, so that a later
+            change to `private` cannot silently leave a grant in place.
+          items:
+            $ref: '#/components/schemas/shareGrant'
+        publishTo:
+          type: array
+          description: |
+            Remote TEA servers this object is mirrored to. Mirroring is a copy,
+            not a reference: once an object reaches another server, this
+            server's distribution no longer governs it.
+          items:
+            $ref: '#/components/schemas/publicationTarget'
+      required:
+        - visibility
+
+    shareGrant:
+      type: object
+      description: An entitlement for one organisation to read one object.
+      properties:
+        organizationUuid:
+          type: string
+          format: uuid
+          description: The consuming organisation's UUID on this server.
+        organizationName:
+          type: string
+          description: Display name at the time of granting. Advisory; the UUID is the identity.
+        grantedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+          description: |
+            When the grant lapses. A grant for the duration of an evaluation or
+            a contract is the common case, and a server that cannot express an
+            expiry pushes publishers towards grants nobody ever revokes.
+      required:
+        - organizationUuid
+
+    publicationTarget:
+      type: object
+      description: A remote TEA server this publisher mirrors objects to.
+      properties:
+        uuid:
+          type: string
+          format: uuid
+          description: Identifier of a target already configured on this server.
+        domain:
+          type: string
+          description: |
+            The TEI domain-name component of the target, which is what a
+            consumer resolves. Reported so a publisher can see where a copy
+            went without holding the target's credentials.
+        state:
+          type: string
+          description: State of the most recent mirroring attempt for this object.
+          enum:
+            - pending
+            - published
+            - failed
+        lastAttemptAt:
+          type: string
+          format: date-time
+        detail:
+          type: string
+          description: Why the last attempt failed, when it did.
+      required:
+        - uuid
+
+    artifactSignature:
+      type: object
+      description: |
+        A detached signature over an artifact format's bytes.
+
+        The consumption API exposes only a `signatureUrl`, which tells a
+        consumer where a signature lives but not what it is, so verifying one
+        means guessing the scheme. A publisher knows, and stating it here is
+        what makes the signature checkable rather than merely present.
+      properties:
+        signatureType:
+          type: string
+          description: The signature scheme, so a consumer knows how to verify rather than having to guess.
+          enum:
+            - jws
+            - cose
+            - pgp
+            - x509-cms
+            - sigstore-bundle
+            - ssh
+        url:
+          type: string
+          format: url
+          description: Direct download URL for the detached signature.
+        keyId:
+          type: string
+          description: Key identifier the signature was produced with, where the scheme has one.
+        certificateUrl:
+          type: string
+          format: url
+          description: Signing certificate or chain, where verification needs one.
+        transparencyLogUrl:
+          type: string
+          format: url
+          description: |
+            Entry in a signature transparency log, such as Rekor. A signature
+            that is itself publicly logged is far harder to backdate.
+        signedAt:
+          type: string
+          format: date-time
+      required:
+        - signatureType
+        - url
+
     identifier:
       type: object
       description: An identifier with a specified type
@@ -533,6 +1036,93 @@ components:
         - swid
         - swift
   responses:
+    204-object-deleted:
+      description: |
+        The object was deleted and is no longer resolvable through the
+        consumption API.
+
+        Deletion does not retract what consumers already hold. An object that
+        was published outside this server SHOULD also be withdrawn through a CLE
+        `withdrawn` event, so a consumer who acted on it can learn that it was
+        retracted rather than simply finding it gone.
+    409-conflict:
+      description: |
+        The request conflicts with the current state of the object: a create
+        that would duplicate an existing natural key, an update against a
+        version that has since been superseded, or a distribution change that
+        would make an object more visible than the object it belongs to.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    413-payload-too-large:
+      description: The uploaded artifact or signature exceeds the size this server accepts.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    415-unsupported-media-type:
+      description: The supplied media type is not one this server accepts for the object.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    403-forbidden:
+      description: |
+        Authenticated, but not entitled to perform this operation on this
+        object. Distinct from 401 on purpose: a publisher debugging a pipeline
+        needs to know whether the credential was rejected or the permission was.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    200-tea-collection-updated:
+      description: TEA Collection updated successfully
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/collection'
+    201-tea-artifact-created:
+      description: TEA Artifact created successfully
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/artifact'
+    200-tea-artifact-updated:
+      description: TEA Artifact updated successfully
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/artifact'
+    200-tea-distribution:
+      description: The distribution in force for the object
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              uuid:
+                type: string
+                format: uuid
+                description: The object the distribution applies to.
+              declared:
+                description: |
+                  What this object sets for itself. Absent when the object
+                  declares nothing and relies entirely on inheritance.
+                $ref: '#/components/schemas/distribution'
+              effective:
+                description: What is actually enforced, after inheritance.
+                $ref: '#/components/schemas/distribution'
+              inheritedFrom:
+                type: string
+                format: uuid
+                description: |
+                  The ancestor the effective distribution came from, when it was
+                  not declared on this object. Naming it is what lets a
+                  publisher fix the cause rather than the symptom.
+            required:
+              - uuid
+              - effective
     200-tea-product-updated:
       description: TEA Product updated successfully
       content:
@@ -635,6 +1225,52 @@ components:
       content:
         application/json: {}
   parameters:
+    objectUuid:
+      name: uuid
+      in: path
+      required: true
+      description: UUID of the object in the TEA server.
+      schema:
+        type: string
+        format: uuid
+    formatIndex:
+      name: formatIndex
+      in: path
+      required: true
+      description: |
+        Zero-based index of the format within the artifact's `formats` array.
+        Formats are addressed positionally because a media type is not unique
+        within an artifact — the same document is often published both
+        compressed and not.
+      schema:
+        type: integer
+        minimum: 0
+    idempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      description: |
+        A client-chosen key making a create safe to retry.
+
+        Publication runs in release pipelines, which retry. Without this, a
+        timeout that actually succeeded produces a second product on the next
+        attempt, and the duplicate is discovered by a consumer rather than by
+        the publisher. A server that supports the key MUST return the original
+        result for a repeat of the same key rather than creating again.
+      schema:
+        type: string
+        maxLength: 255
+    contentDigest:
+      name: Content-Digest
+      in: header
+      required: false
+      description: |
+        Digest of the request body, per RFC 9530, e.g. `sha-256=:<base64>:`.
+        Where supplied, the server MUST verify it against the bytes received and
+        reject a mismatch rather than storing content that does not match the
+        checksum it will be published under.
+      schema:
+        type: string
     page-offset:
       name: pageOffset
       description: Pagination offset
@@ -756,16 +1392,73 @@ components:
       description: |
         HMAC authentication uses a shared secret key to create a signature of the request content using a secure hash algorithm (SHA256,
         SHA384, SHA512, SHA3-256, SHA3-384, or SHA3-512). The server verifies this signature to authenticate the request.
-  operations:
-    standardDelete:
-      responses:
-        '204':
-          description: Resource successfully deleted
-        '401':
-          $ref: '#/components/responses/401-unauthorized'
-        '404':
-          $ref: '#/components/responses/404-object-by-id-not-found'
   requestBodies:
+    UpdateTeaCollection:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              updateReason:
+                $ref: '#/components/schemas/collectionUpdateReason'
+              distribution:
+                $ref: '#/components/schemas/distribution'
+            required:
+              - updateReason
+    CreateTeaArtifact:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              collectionUuid:
+                type: string
+                format: uuid
+                description: The collection this artifact belongs to.
+              name:
+                type: string
+                description: Human-readable name of the artifact.
+              type:
+                type: string
+                description: Type of artifact, as defined by the consumption API.
+              author:
+                type: string
+                description: Author of the artifact.
+              formats:
+                type: array
+                description: |
+                  The representations this artifact is published in. A format
+                  may carry a `url` when the publisher hosts the bytes itself;
+                  otherwise the bytes are uploaded to this server afterwards.
+                items:
+                  $ref: '#/components/schemas/artifactFormat'
+              distribution:
+                $ref: '#/components/schemas/distribution'
+            required:
+              - collectionUuid
+              - name
+              - formats
+    UpdateTeaArtifact:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            description: |
+              Metadata only. Stored bytes are immutable — see the operation
+              description for why replacing content means a new format or a new
+              artifact rather than an overwrite.
+            properties:
+              name:
+                type: string
+              type:
+                type: string
+              author:
+                type: string
+              distribution:
+                $ref: '#/components/schemas/distribution'
     UpdateTeaProduct:
       required: true
       content:
@@ -1224,6 +1917,14 @@ tags:
     description: Operations related to TEA Releases
   - name: TEA Collection
     description: Operations related to TEA Collections
+  - name: TEA Artifact
+    description: |
+      Operations on the artifacts a collection publishes, including uploading
+      their content and attaching detached signatures.
+  - name: TEA Distribution
+    description: |
+      Operations controlling who may read an object through the consumption
+      API: the publishing organisation alone, named counterparties, or anyone.
 externalDocs:
   description: Transparency Exchange API specification
   url: https://github.com/CycloneDX/transparency-exchange-api
