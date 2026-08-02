@@ -111,12 +111,20 @@ Three visibilities — `private`, `shared` (to named organisation UUIDs, with
 optional expiry) and `public` — plus `publishTo` for mirroring to other TEA
 servers. Two rules carry the weight:
 
-- **Inheritance narrows, never widens.** An artifact takes its collection's
-  policy, a collection its release's, a release its product's. A child may
-  restrict what it inherits and must not loosen it; a server rejects the attempt
-  with `ACCESS_WIDENS_PARENT`. Without this, marking a product private would
-  guarantee nothing, because any artifact beneath it could quietly be made
-  public.
+- **The narrowest declaration on the chain wins, not the nearest.** An artifact
+  sits under its collection, a collection under its release, a release under its
+  product, and the policy in force is the most restrictive declared anywhere
+  between the object and the root. `ACCESS_WIDENS_PARENT` rejects a declaration
+  that is too wide when it is written, which is not the same guarantee: it says
+  nothing about a parent narrowed afterwards. Under nearest-wins, an artifact
+  that had declared `public` stays public after its product is set to `private`,
+  so marking a product private would be a statement about one row.
+
+  Where several levels declare `shared`, entitlements intersect and the earliest
+  expiry applies, because a grant on a child cannot create an entitlement its
+  parent withheld. Descendants' declarations are never rewritten, so widening a
+  product back restores each descendant to its own declaration and no further.
+  That is what makes a temporary embargo reversible.
 - **`public` is one-way in practice.** No later request recalls what has already
   been fetched, so that transition requires `confirm=public` rather than being
   an ordinary field update. The mechanism is named, not merely asked for: an

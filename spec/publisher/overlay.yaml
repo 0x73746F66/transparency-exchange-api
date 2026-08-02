@@ -890,12 +890,30 @@ components:
         counterparties under agreement, and material that is purely internal.
         Absent this, every publisher invents an answer, incompatibly.
 
-        Resolved by inheritance: an artifact takes its collection's policy, a
-        collection its release's, a release its product's. An object MAY narrow
-        what it inherits and MUST NOT widen it — a server rejects the attempt
-        with `ACCESS_WIDENS_PARENT`. Without that rule, marking a product
-        private would guarantee nothing, because any artifact beneath it could
-        quietly be made public.
+        Resolved along the chain from the object to the root: an artifact sits
+        under its collection, a collection under its release, a release under
+        its product. The policy in force is the NARROWEST declared anywhere on
+        that chain, not the nearest.
+
+        The distinction is the whole guarantee. Under nearest-wins, an artifact
+        that had declared `public` before its product was set to `private` goes
+        on being public, because its own declaration is the nearest one and so
+        becomes the answer. `ACCESS_WIDENS_PARENT` alone does not prevent this:
+        it rejects a declaration that is too wide at the moment it is written,
+        and says nothing about a parent narrowed afterwards. A publisher
+        narrowing a product is entitled to expect that to mean something about
+        everything beneath it.
+
+        Where more than one level declares `shared`, the entitlements are the
+        INTERSECTION of their `sharedWith` sets and the earliest expiry applies.
+        A grant made on a child cannot create an entitlement its parent
+        withheld.
+
+        A server MUST NOT rewrite the declarations of descendants when an
+        ancestor narrows. Folding is reversible and rewriting is not: widening
+        a product back restores each descendant to its own declaration and no
+        further, which is what makes a temporary embargo a supported operation
+        rather than a decision that cannot be undone.
 
         A consumer denied by this policy is answered with the consumption
         specification's existing `OBJECT_NOT_SHAREABLE`, so enforcement needs
@@ -1119,13 +1137,19 @@ components:
             and relies entirely on inheritance.
           $ref: "#/components/schemas/access-policy"
         effective:
-          description: What is enforced, after inheritance.
+          description: |
+            What is enforced: the narrowest policy declared between this object
+            and the root, with `shared` entitlements intersected.
           $ref: "#/components/schemas/access-policy"
         inheritedFrom:
           description: |
-            The ancestor the effective policy came from, when it was not
-            declared here. Naming it lets a publisher fix the cause rather than
-            the symptom.
+            The ancestor that constrained the answer, so a publisher can fix the
+            cause rather than the symptom.
+
+            Present whenever an ancestor is what makes the effective policy
+            narrower than this object's own declaration, which includes the case
+            where the object declares something of its own and is overruled. An
+            ancestor that merely agrees is not the cause and is not reported.
           $ref: "#/components/schemas/uuid"
         mirrors:
           type: array
