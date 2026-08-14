@@ -144,3 +144,4 @@ Contributors are listed in the [Contributors](contributors.md) file.
 
 - [The CycloneDX BOM Exchange API](/api/bomexchangeapi.md)
    Implemented in the [CycloneDX BOM Repo Server](https://github.com/CycloneDX/cyclonedx-bom-repo-server)
+<!-- ci-touch: 2026-08-14T04:04:34Z -->
