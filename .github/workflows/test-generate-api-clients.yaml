@@ -3,6 +3,9 @@ name: Build & Test Generated API Clients
 on:
     push:
         branches: ['main']
+        paths: ['spec/**']
+    pull_request:
+        paths: ['spec/**']
     workflow_dispatch:
 
 concurrency:
@@ -152,9 +155,9 @@ jobs:
 
         steps:
             - name: Setup Node
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v6
               with:
-                  node-version: latest
+                  node-version: '22'
 
             - name: Get generated code from cache
               uses: actions/cache/restore@v4

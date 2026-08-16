@@ -8,7 +8,9 @@ name: Publisher Spec Sync
 on:
     push:
         branches: ['main']
+        paths: ['spec/**']
     pull_request:
+        paths: ['spec/**']
     workflow_dispatch:
 
 concurrency:
@@ -26,7 +28,7 @@ jobs:
               uses: actions/checkout@v4
 
             - name: Setup Node
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v6
               with:
                   node-version: '22'
 
